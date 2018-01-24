@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <vector>
 
 template <class T>
 class Matrix
@@ -9,18 +10,29 @@ public:
     Matrix(size_t numRows, size_t numCols, T defaultValue = 0);
 	~Matrix();
 	
+    /// Fetches the element at the given coordinates
+    const T & operator()(size_t row, size_t col) const { return Get(row, col); }
+    /// Fetches the element at the given coordinates
+    T & operator()(size_t row, size_t col) { return Get(row, col); }
 	/// Fetches the element at the given coordinates
 	const T & Get(size_t row, size_t col) const;
 	/// Fetches the element at the given coordinates
 	T & Get(size_t row, size_t col);
-    size_t Rows() { return m_columns; }
-    size_t Columns() { return m_rows; }
+
+    
+    size_t Rows() const { return m_columns; }
+    size_t Columns() const { return m_rows; }
     Matrix operator*(const Matrix & rhs);
     
 private:
 	/// Converts the 2D element coord to a 1D index
 	size_t Index(const size_t & x, const size_t & y) const;
-    
+    /// Returns the vector of pointers to elements in the row at the given index.
+    std::vector<T*> GetRow(size_t row);
+    /// Returns a pointer to the first element in a column.
+    T* GetColumn(size_t col);
+    const T* GetColumn(size_t col) const;
+
     /// The # of rows in this matrix.
     const size_t m_rows;
 	/// The # of columns in this matrix.
@@ -63,19 +75,55 @@ T & Matrix<T>::Get(size_t row, size_t col) {
 }
 
 template <class T>
+std::vector<T*> Matrix<T>::GetRow(size_t rowIndex) {
+    // This method is called only by fns that error check, so no need to check rowIndex
+    std::vector<T*> row;
+    row.reserve(m_columns);
+    for(size_t i = 0; i < m_columns; i++)
+        row.push_back(&Get(rowIndex, i));
+    
+    return row;
+}
+
+// Since Matrix is stored in column major, just return a pointer to the first element in the column.
+template <class T>
+T* Matrix<T>::GetColumn(size_t colIndex) {
+    // This method is called only by fns that error check, so no need to check colIndex
+    return &(m_data[colIndex * m_rows]);
+}
+
+// Since Matrix is stored in column major, just return a pointer to the first element in the column.
+template <class T>
+const T* Matrix<T>::GetColumn(size_t colIndex) const {
+    // This method is called only by fns that error check, so no need to check colIndex
+    return &(m_data[colIndex * m_rows]);
+}
+
+template <class T>
 Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //My # of columns (width) must equal # of rows (height) in other matrix.
     if(m_columns != rhs.m_rows)
-        throw std::invalid_argument("Invalid argument. Width of first matrix must match height of second matrix");
+        throw std::invalid_argument("Invalid argument. Width (columns) of first matrix must match height (rows) of second matrix");
     
     //First pass attempt.
     //TODO: Optimize across threads (OpenMP) & implement vector processing.
     
     //Note that the length of each row is num columns and vice versa.
-    
+    //LHS = A, RHS = B
     //Iterate over the elements of the result matrix.
     Matrix<T> result(m_rows, rhs.m_columns);
     
+    for (size_t i = 0; i < m_rows; i++) {
+        for (size_t j = 0; j < rhs.m_columns; j++) {
+            auto rowA = GetRow(i);
+            T* colB = GetColumn(j);
+            
+            T res = 0;
+            for(size_t k = 0; k < m_columns; k++)
+                res += ( *(rowA.at(k)) * colB[k]);
+            result(i, j) = res;
+        }
+    }
     
     return result;
 }

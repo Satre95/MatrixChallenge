@@ -1,8 +1,12 @@
 #include <iostream>
-#include <glm/glm.hpp>
+#include <Eigen/Dense>
 #include "Matrix.hpp"
 
 using namespace std;
+typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> EigenMat;
+
+bool compareMatrices(const Matrix<float> & A, const EigenMat & B);
+
 int main() {
 	Matrix<float> m1(4, 10, 113.123123123f);
     Matrix<float> m2(10, 4, 12.f);
@@ -17,4 +21,13 @@ int main() {
 
     
 	return 0;
+}
+
+bool compareMatrices(const Matrix<float> & A, const EigenMat & B) {
+    for (size_t i = 0; i < A.Rows(); i++) {
+        for (size_t j = 0; j < A.Columns(); j++) {
+            if(A(i, j) != B(i, j)) return false;
+        }
+    }
+    return true;
 }

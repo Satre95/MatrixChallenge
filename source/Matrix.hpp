@@ -1,13 +1,15 @@
 #pragma once
 
 #include <stdexcept>
+#include <iostream>
 #include <vector>
 
 template <class T>
 class Matrix
 {
 public:
-    Matrix(size_t numRows, size_t numCols, T defaultValue = 0);
+    Matrix(size_t numRows = 4, size_t numCols = 4, T defaultValue = 0);
+    Matrix(const Matrix & other);
 	~Matrix();
 	
     /// Fetches the element at the given coordinates
@@ -18,10 +20,9 @@ public:
 	const T & Get(size_t row, size_t col) const;
 	/// Fetches the element at the given coordinates
 	T & Get(size_t row, size_t col);
-
     
-    size_t Rows() const { return m_columns; }
-    size_t Columns() const { return m_rows; }
+    size_t Rows() const { return m_rows; }
+    size_t Columns() const { return m_columns; }
     Matrix operator*(const Matrix & rhs);
     
 private:
@@ -53,6 +54,12 @@ Matrix<T>::Matrix(size_t numRows, size_t numCols, T defaultValue): m_rows(numRow
 }
 
 template <class T>
+Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(other.m_columns) {
+    m_data = (T*)std::malloc(sizeof(T) * m_rows * m_columns);
+    std::copy(other.m_data, other.m_data + (m_rows * m_columns), m_data);
+}
+
+template <class T>
 Matrix<T>::~Matrix() {
 	delete[] m_data;
 }
@@ -64,13 +71,15 @@ size_t Matrix<T>::Index(const size_t & row, const size_t & col) const {
 
 template <class T>
 const T & Matrix<T>::Get(size_t row, size_t col) const {
-	if(row >= m_rows || col >= m_columns) throw std::invalid_argument( "Invalid element coordiante" );
+	if(row >= m_rows || col >= m_columns)
+        throw std::invalid_argument( "Invalid element coordiante" );
 	return m_data[Index(row, col)];
 }
 
 template <class T>
 T & Matrix<T>::Get(size_t row, size_t col) {
-    if(row >= m_rows || col >= m_columns) throw std::invalid_argument( "Invalid element coordiante" );
+    if(row >= m_rows || col >= m_columns)
+        throw std::invalid_argument( "Invalid element coordiante" );
     return m_data[Index(row, col)];
 }
 
@@ -110,13 +119,12 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     
     //Note that the length of each row is num columns and vice versa.
     //LHS = A, RHS = B
-    //Iterate over the elements of the result matrix.
     Matrix<T> result(m_rows, rhs.m_columns);
     
     for (size_t i = 0; i < m_rows; i++) {
         for (size_t j = 0; j < rhs.m_columns; j++) {
             auto rowA = GetRow(i);
-            T* colB = GetColumn(j);
+            const T* colB = rhs.GetColumn(j);
             
             T res = 0;
             for(size_t k = 0; k < m_columns; k++)
@@ -126,4 +134,16 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     }
     
     return result;
+}
+
+template <class T>
+std::ostream & operator<<(std::ostream & out, const Matrix<T> & m) {
+    for (size_t i = 0; i < m.Rows(); i++) {
+        for(size_t j = 0; j < m.Columns(); j++) {
+            out << m(i, j) << ' ';
+        }
+        out << std::endl;
+    }
+    
+    return out;
 }

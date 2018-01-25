@@ -22,8 +22,5 @@ set(THREADS_PREFER_PTHREAD ON)
 set(CMAKE_MACOSX_RPATH 1) # Prevents warnings on MacOS
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# GLM is used to verify test results.
-add_subdirectory(eigen)
-
 # Add the source directory
 add_subdirectory(source)

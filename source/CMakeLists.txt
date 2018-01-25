@@ -1,7 +1,7 @@
-set(HEADER_FILES Matrix.hpp)
+set(HEADER_FILES Matrix.hpp Rand.hpp)
 set(SOURCE_FILES CorrectnessTests.cpp)
 
-link_libraries(eigen)
+include_directories(../eigen3)
 add_executable(CorrectnessTests ${HEADER_FILES} CorrectnessTests.cpp)
 
 if(WIN32 AND MSVC) # Check if we are using the Visual Studio compiler

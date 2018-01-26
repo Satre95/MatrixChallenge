@@ -19,7 +19,7 @@ void testInvalidMultiplication();
 char sectionBreak[81];
 
 int main() {
-    std::fill(sectionBreak, sectionBreak + 79, '*');
+    std::fill(sectionBreak, sectionBreak + 79, '=');
     sectionBreak[79] = '\n';
     sectionBreak[80] = '\0';
 
@@ -31,8 +31,8 @@ int main() {
     cout << sectionBreak;
     testMultiplication();
     cout << sectionBreak;
-    // testInvalidMultiplication();
-    // cout << sectionBreak;
+    testInvalidMultiplication();
+    cout << sectionBreak;
     
 	return 0;
 }

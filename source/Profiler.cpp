@@ -12,6 +12,7 @@ char sectionBreak[81];
 
 Matrix<float> generateRandomMatrix(int rowsMin, int rowsMax, int colsMin, int colsMax);
 void profileLargeMatrixMultiplication();
+void profileLargeMatrixTranspose();
 
 int main() {
     std::fill(sectionBreak, sectionBreak + 79, '=');
@@ -22,6 +23,8 @@ int main() {
 	cout << "This program measures the execution time of my Matrix class." << endl;
 	cout << sectionBreak;
 	profileLargeMatrixMultiplication();
+	cout << sectionBreak;
+	profileLargeMatrixTranspose();
 	cout << sectionBreak;
 	return 0;
 }
@@ -46,6 +49,26 @@ void profileLargeMatrixMultiplication() {
 		<< B.Rows() << "x" << B.Columns() << " matrix took " 
 		<< chrono::duration_cast<chrono::microseconds>(end - begin).count() / 1000.f
 		<< " ms" << endl; 
+}
+
+void profileLargeMatrixTranspose() {
+	cout << "This function measures the execution time of very large matrix transposition" << endl;
+	const int rows = 2000;
+	const int columns = 4000;
+
+	auto A = generateRandomMatrix(rows, rows, columns, columns);
+	cout << "Matrix A is " << A.Rows() << "x" << A.Columns() << endl;
+
+	auto begin = chrono::high_resolution_clock::now();
+	auto B = A.Transpose();
+	auto end = chrono::high_resolution_clock::now();
+
+	cout << "The transpose of matrix A is " << B.Rows() << "x" << B.Columns() << endl;
+	cout << endl;
+	cout << "Transpose took " << chrono::duration_cast<chrono::microseconds>(end - begin).count() / 1000.f
+		<< " ms" << endl;
+
+
 }
 
 Matrix<float> generateRandomMatrix(int rowsMin, int rowsMax, int colsMin, int colsMax) {

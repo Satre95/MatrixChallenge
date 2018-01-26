@@ -3,6 +3,9 @@
 #include <stdexcept>
 #include <iostream>
 #include <vector>
+#ifdef USE_INTRINSICS
+#include "xmmintrin.h"
+#endif
 
 template <class T>
 class Matrix
@@ -109,14 +112,40 @@ const T* Matrix<T>::GetColumn(size_t colIndex) const {
     return &(m_data[colIndex * m_rows]);
 }
 
+#ifdef USE_INTRINSICS //Version of the fn that use SSE2 intrinsics.
+
 template <class T>
 Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //My # of columns (width) must equal # of rows (height) in other matrix.
     if(m_columns != rhs.m_rows)
         throw std::invalid_argument("Invalid argument. Width (columns) of first matrix must match height (rows) of second matrix");
     
-    //First pass attempt.
-    //TODO: implement vector processing.
+    //Note that the length of each row is num columns and vice versa.
+    //LHS = A, RHS = B
+    Matrix<T> result(m_rows, rhs.m_columns);
+    // #pragma omp parallel for
+    for (size_t i = 0; i < m_rows; i++) {
+        for (size_t j = 0; j < rhs.m_columns; j++) {
+            auto rowA = GetRow(i);
+            const T* colB = rhs.GetColumn(j);
+            
+            T res = 0;
+            for(size_t k = 0; k < m_columns; k++)
+                res += ( *(rowA.at(k)) * colB[k]);
+            result(i, j) = res;
+        }
+    }
+    
+    return result;
+}
+
+#else
+
+template <class T>
+Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
+    //My # of columns (width) must equal # of rows (height) in other matrix.
+    if(m_columns != rhs.m_rows)
+        throw std::invalid_argument("Invalid argument. Width (columns) of first matrix must match height (rows) of second matrix");
     
     //Note that the length of each row is num columns and vice versa.
     //LHS = A, RHS = B
@@ -137,14 +166,16 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     return result;
 }
 
+#endif
+
 template <class T>
 Matrix<T> Matrix<T>::Transpose() const {
     Matrix<T> transpose(m_columns, m_rows);
-    
+
     #pragma omp parallel for
-    for (int i = 0; i < m_rows; ++i)
+    for (int i = 0; i < m_rows; i++)
     {
-        for (int j = 0; j < m_columns; ++j)
+        for (int j = 0; j < m_columns; j++)
         {
             transpose(j,i) = Get(i, j);   
         }

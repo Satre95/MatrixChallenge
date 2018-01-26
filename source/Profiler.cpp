@@ -31,8 +31,8 @@ int main() {
 
 void profileLargeMatrixMultiplication() {
 	cout << "This function measures the execution time of very large matrix multiplication" << endl;
-	const int rows = 900;
-	const int columns = 700;
+	const int rows = 10;
+	const int columns = 20;
 
 	auto A = generateRandomMatrix(rows, rows, columns, columns);
 	auto B = generateRandomMatrix(columns, columns, rows, rows);
@@ -53,8 +53,8 @@ void profileLargeMatrixMultiplication() {
 
 void profileLargeMatrixTranspose() {
 	cout << "This function measures the execution time of very large matrix transposition" << endl;
-	const int rows = 2000;
-	const int columns = 4000;
+	const int rows = 10;
+	const int columns = 20;
 
 	auto A = generateRandomMatrix(rows, rows, columns, columns);
 	cout << "Matrix A is " << A.Rows() << "x" << A.Columns() << endl;

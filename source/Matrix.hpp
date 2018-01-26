@@ -120,7 +120,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //Note that the length of each row is num columns and vice versa.
     //LHS = A, RHS = B
     Matrix<T> result(m_rows, rhs.m_columns);
-    
+    #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
         for (size_t j = 0; j < rhs.m_columns; j++) {
             auto rowA = GetRow(i);

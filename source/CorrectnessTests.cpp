@@ -11,10 +11,13 @@ std::mt19937 Rand::sBase( time(nullptr) );
 std::uniform_real_distribution<float> Rand::sFloatGen;
 
 bool operator==(const Matrix<float> & A, const EigenMat & B);
+bool operator==(const Matrix<float> & A, const Matrix<float> & B);
+
 pair<Matrix<float>, EigenMat> generateRandomMatrix(int rowsMin = 10, int rowsMax = 20, int colsMin = 10, int colsMax = 20);
 
 void testMultiplication();
 void testInvalidMultiplication();
+void testTranspose();
 
 char sectionBreak[81];
 
@@ -32,6 +35,8 @@ int main() {
     testMultiplication();
     cout << sectionBreak;
     testInvalidMultiplication();
+    cout << sectionBreak;
+    testTranspose();
     cout << sectionBreak;
     
 	return 0;
@@ -72,9 +77,9 @@ void testMultiplication() {
 }
 
 void testInvalidMultiplication() {
-    cout << "This tests the case where the number of columns in matrix A " << endl;
-    cout << "is not equal to the number of columns in B, so multiplication " << endl;
-    cout << "is not possible." << endl;
+    cout << "This tests the case where the number of columns in matrix A "
+        << "is not equal " << endl;
+    cout << "to the number of columns in B, so multiplication is not possible." << endl;
 
     // Make the matrices.    
     auto pair1 = generateRandomMatrix(200, 400, 200, 400);
@@ -99,7 +104,53 @@ void testInvalidMultiplication() {
     }
 }
 
+void testTranspose() {
+    cout << "Testing the transpose function of an arbitrarily large matrix." << endl;
+
+    auto pair = generateRandomMatrix(200, 400, 200, 400);
+    Matrix<float> & A = pair.first;
+
+    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
+
+    Matrix<float> B = A.Transpose();
+    cout << "\tThe transpose of Matrix A is " << B.Rows() << "x" << B.Columns() << endl;
+
+    cout << endl;
+
+    //Verify transpose
+    for (int i = 0; i < A.Rows(); ++i)
+    {
+        for (int j = 0; j < A.Columns(); ++j)
+        {
+            if(A(i,j) != B(j, i)) {
+                cout << "\tTest Failed!" << endl;
+                return;
+            }
+        }
+    }
+
+    //Transpose of a transpose should give back the original matrix.
+    Matrix<float> C = B.Transpose();
+    if(!(A == C)) {
+        cout << "\tTest Failed!" << endl;
+        cout << "\tTranspose of a transpose should yield the orignal matrix." << endl;
+        return;
+    }
+
+    cout << "\tTest Passed!" << endl;
+}
+
+
 bool operator==(const Matrix<float> & A, const EigenMat & B) {
+    for (size_t i = 0; i < A.Rows(); i++) {
+        for (size_t j = 0; j < A.Columns(); j++) {
+            if(A(i, j) != B(i, j)) return false;
+        }
+    }
+    return true;
+}
+
+bool operator==(const Matrix<float> & A, const Matrix<float> & B) {
     for (size_t i = 0; i < A.Rows(); i++) {
         for (size_t j = 0; j < A.Columns(); j++) {
             if(A(i, j) != B(i, j)) return false;

@@ -3,12 +3,21 @@ set(PROJECT_NAME MatrixChallenge)
 cmake_minimum_required(VERSION 3.5)
 project(MatrixChallenge CXX)
 
+# Query whether the system support SSE2
+cmake_host_system_information(RESULT SSE2_AVAILABLE QUERY HAS_SSE2)
+# Add it to the compile definitions if we do.
+if(SSE2_AVAILABLE)
+	message("Compiling with SSE2 support")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+endif()
+
 find_package(Threads REQUIRED)
 OPTION (USE_OpenMP "Use OpenMP" ON)
 
 if(USE_OpenMP)
 	find_package(OpenMP)
 	if(OPENMP_FOUND)
+		message("Compiling with OpenMP support")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 	endif()
 endif()

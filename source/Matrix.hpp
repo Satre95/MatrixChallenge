@@ -24,7 +24,8 @@ public:
     size_t Rows() const { return m_rows; }
     size_t Columns() const { return m_columns; }
     Matrix operator*(const Matrix & rhs);
-    
+    /// Returns the transpose of this matrix
+    Matrix Transpose() const;   
 private:
 	/// Converts the 2D element coord to a 1D index
 	size_t Index(const size_t & x, const size_t & y) const;
@@ -115,7 +116,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
         throw std::invalid_argument("Invalid argument. Width (columns) of first matrix must match height (rows) of second matrix");
     
     //First pass attempt.
-    //TODO: Optimize across threads (OpenMP) & implement vector processing.
+    //TODO: implement vector processing.
     
     //Note that the length of each row is num columns and vice versa.
     //LHS = A, RHS = B
@@ -137,6 +138,22 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
 }
 
 template <class T>
+Matrix<T> Matrix<T>::Transpose() const {
+    Matrix<T> transpose(m_columns, m_rows);
+    
+    #pragma omp parallel for
+    for (int i = 0; i < m_rows; ++i)
+    {
+        for (int j = 0; j < m_columns; ++j)
+        {
+            transpose(j,i) = Get(i, j);   
+        }
+    }
+
+    return transpose;
+}
+
+template <class T>
 std::ostream & operator<<(std::ostream & out, const Matrix<T> & m) {
     for (size_t i = 0; i < m.Rows(); i++) {
         for(size_t j = 0; j < m.Columns(); j++) {
@@ -147,3 +164,4 @@ std::ostream & operator<<(std::ostream & out, const Matrix<T> & m) {
     
     return out;
 }
+

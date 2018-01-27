@@ -54,12 +54,16 @@ private:
 
 template <class T>
 Matrix<T>::Matrix(size_t numRows, size_t numCols, T defaultValue): m_rows(numRows), m_columns(numCols) {
+    if(numRows * numCols == 0) throw std::invalid_argument("Error. Cannot create matrix with 0 dimension(s)");
+    
+    //TODO: Implementing 4-byte float aligned memory allocation.
 	m_data = new T[numRows * numCols];
 	std::fill(m_data, m_data + (numRows * numCols), defaultValue);
 }
 
 template <class T>
 Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(other.m_columns) {
+    //TODO: Implementing 4-byte float aligned memory allocation.
     m_data = (T*)std::malloc(sizeof(T) * m_rows * m_columns);
     std::copy(other.m_data, other.m_data + (m_rows * m_columns), m_data);
 }
@@ -122,13 +126,14 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
         throw std::invalid_argument("Invalid argument. Width (columns) of first matrix must match height (rows) of second matrix");
     
     //Note that the length of each row is num columns and vice versa.
-    //LHS = A, RHS = B
     Matrix<T> result(m_rows, rhs.m_columns);
      //Since matrices are stored in column major, need to copy row to 
     //contiguous aligned memory. Recycle the array
+    //TODO: Implementing 4-byte float aligned memory allocation.
+    //Needed for matrices that are non-multiples of 4.
     T* rowData = (T*) std::malloc(m_columns * sizeof(T));
 
-     #pragma omp parallel for
+    #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
         for (size_t j = 0; j < rhs.m_columns; j++) {
             auto rowA = GetRow(i);
@@ -139,7 +144,10 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
             const T* colB = rhs.GetColumn(j);
             
             T res = 0;
-            for(size_t k = 0; k < m_columns; k+=4) {
+            size_t k = 0;
+            
+            for(k = 0; k + 3 < m_columns; k+=4) {
+                std::cerr << "k:" << k << std::endl;
                 __m128 colVec = _mm_load_ps(colB + k);
                 __m128 rowVec = _mm_load_ps(rowData + k);
                 __m128 prodSum = _mm_mul_ps(colVec, rowVec);
@@ -158,6 +166,9 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
 
                 res += static_cast<T>(temp);
             }
+            for(; k < m_columns; k++)
+                res += static_cast<T>(rowData[k] * colB[k]);
+            
             result(i, j) = res;
         }
     }

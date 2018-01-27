@@ -31,8 +31,8 @@ int main() {
 
 void profileLargeMatrixMultiplication() {
 	cout << "This function measures the execution time of very large matrix multiplication" << endl;
-	const int rows = 10;
-	const int columns = 20;
+	const int rows = 1600;
+	const int columns = 2000;
 
 	auto A = generateRandomMatrix(rows, rows, columns, columns);
 	auto B = generateRandomMatrix(columns, columns, rows, rows);

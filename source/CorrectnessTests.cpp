@@ -47,11 +47,11 @@ void testMultiplication() {
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
 
     // Make the matrices.    
-    auto pair1 = generateRandomMatrix(20, 20, 20, 20);
+    auto pair1 = generateRandomMatrix(22, 22, 22, 22);
     Matrix<float> & A = pair1.first;
     EigenMat & ACond = pair1.second;
     
-    auto pair2 = generateRandomMatrix(A.Columns(), A.Columns(), 20, 20);
+    auto pair2 = generateRandomMatrix(A.Columns(), A.Columns(), 22, 22);
     Matrix<float> & B = pair2.first;
     EigenMat & BCond = pair2.second;
 

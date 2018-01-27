@@ -3,13 +3,16 @@ set(PROJECT_NAME MatrixChallenge)
 cmake_minimum_required(VERSION 3.5)
 project(MatrixChallenge CXX)
 
+OPTION (USE_SIMD "Use SSE SIMD intrinsics" ON)
+if(USE_SIMD)
 # Query whether the system support SSE2
-cmake_host_system_information(RESULT SSE2_AVAILABLE QUERY HAS_SSE2)
+    cmake_host_system_information(RESULT SSE2_AVAILABLE QUERY HAS_SSE2)
 # Add it to the compile definitions if we do.
-if(SSE2_AVAILABLE)
-	message("Compiling with SSE2 support")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
-	add_definitions(-DUSE_INTRINSICS)
+    if(SSE2_AVAILABLE)
+        message("Compiling with SSE2 support")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+        add_definitions(-DUSE_INTRINSICS)
+    endif()
 endif()
 
 find_package(Threads REQUIRED)

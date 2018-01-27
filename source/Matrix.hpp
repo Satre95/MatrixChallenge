@@ -5,6 +5,7 @@
 #include <vector>
 #ifdef USE_INTRINSICS
 #include "xmmintrin.h"
+#include "pmmintrin.h"
 #endif
 
 template <class T>
@@ -123,18 +124,45 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //Note that the length of each row is num columns and vice versa.
     //LHS = A, RHS = B
     Matrix<T> result(m_rows, rhs.m_columns);
-    // #pragma omp parallel for
+     //Since matrices are stored in column major, need to copy row to 
+    //contiguous aligned memory. Recycle the array
+    T* rowData = (T*) std::malloc(m_columns * sizeof(T));
+
+     #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
         for (size_t j = 0; j < rhs.m_columns; j++) {
             auto rowA = GetRow(i);
+            //Copy the row elements into a contiguous array.
+            for(size_t h = 0; h < m_columns; h++)
+                rowData[h] = *(rowA.at(h));
+            //Get the column data.           
             const T* colB = rhs.GetColumn(j);
             
             T res = 0;
-            for(size_t k = 0; k < m_columns; k++)
-                res += ( *(rowA.at(k)) * colB[k]);
+            for(size_t k = 0; k < m_columns; k+=4) {
+                __m128 colVec = _mm_load_ps(colB + k);
+                __m128 rowVec = _mm_load_ps(rowData + k);
+                __m128 prodSum = _mm_mul_ps(colVec, rowVec);
+                
+                //The _mm_hadd_ps only adds adjacent elements, so run twice to get
+                //full horizontal add.
+                //prodsum = { p3, p2, p1, p0 }
+                prodSum = _mm_hadd_ps(prodSum, prodSum);
+                //prodSum = { p3 + p2, p1 + p0, p3 + p2, p1 + p0 }
+                prodSum = _mm_hadd_ps(prodSum, prodSum);
+                //prodSum = { p3 + p2 + p1 + p0, p3 + p2 + p1 + p0, p3 + p2 + p1 + p0, p3 + p2 + p1 + p0 }
+                //Other sums are superfluous but don't incur penalty.
+                
+                float temp;
+                _mm_store_ss(&temp, prodSum);
+
+                res += static_cast<T>(temp);
+            }
             result(i, j) = res;
         }
     }
+
+    std::free(rowData);
     
     return result;
 }
@@ -157,8 +185,9 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
             const T* colB = rhs.GetColumn(j);
             
             T res = 0;
-            for(size_t k = 0; k < m_columns; k++)
+            for(size_t k = 0; k < m_columns; k++) {
                 res += ( *(rowA.at(k)) * colB[k]);
+            }
             result(i, j) = res;
         }
     }

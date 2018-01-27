@@ -34,10 +34,10 @@ int main() {
     cout << sectionBreak;
     testMultiplication();
     cout << sectionBreak;
-    testInvalidMultiplication();
-    cout << sectionBreak;
-    testTranspose();
-    cout << sectionBreak;
+    // testInvalidMultiplication();
+    // cout << sectionBreak;
+    // testTranspose();
+    // cout << sectionBreak;
     
 	return 0;
 }
@@ -47,11 +47,11 @@ void testMultiplication() {
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
 
     // Make the matrices.    
-    auto pair1 = generateRandomMatrix(200, 300, 200, 300);
+    auto pair1 = generateRandomMatrix(20, 20, 20, 20);
     Matrix<float> & A = pair1.first;
     EigenMat & ACond = pair1.second;
     
-    auto pair2 = generateRandomMatrix(A.Columns(), A.Columns(), 200, 300);
+    auto pair2 = generateRandomMatrix(A.Columns(), A.Columns(), 20, 20);
     Matrix<float> & B = pair2.first;
     EigenMat & BCond = pair2.second;
 
@@ -84,11 +84,9 @@ void testInvalidMultiplication() {
     // Make the matrices.    
     auto pair1 = generateRandomMatrix(200, 400, 200, 400);
     Matrix<float> & A = pair1.first;
-    EigenMat & ACond = pair1.second;
     
     auto pair2 = generateRandomMatrix(A.Columns() - 1, A.Columns() - 1, 200, 500);
     Matrix<float> & B = pair2.first;
-    EigenMat & BCond = pair2.second;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
     cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;

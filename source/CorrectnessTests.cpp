@@ -21,6 +21,7 @@ pair<Matrix<T>, EigenMat<T>> generateRandomMatrix(int rowsMin = 10, int rowsMax 
 
 void testFloatMultiplication();
 void testDoubleMultiplication();
+void testIntMultiplication();
 void testInvalidMultiplication();
 void testTranspose();
 
@@ -39,12 +40,14 @@ int main() {
     cout << sectionBreak;
 //    testFloatMultiplication();
 //    cout << sectionBreak;
-    testDoubleMultiplication();
+//    testDoubleMultiplication();
 //    cout << sectionBreak;
+    testIntMultiplication();
+    cout << sectionBreak;
 //    testInvalidMultiplication();
 //    cout << sectionBreak;
 //    testTranspose();
-    cout << sectionBreak;
+//    cout << sectionBreak;
     
     cout << "short: " << sizeof(short) << " bytes" << endl;
     cout << "double: " << sizeof(double) << " bytes" << endl;
@@ -111,6 +114,40 @@ void testDoubleMultiplication() {
     try {
         Matrix<double> result = A * B;
         EigenMat<double> resultsCond = ACond * BCond;
+        
+        //Verify.
+        if(result == resultsCond)
+            cout << "\tTest Passed!" << endl;
+        else
+            cout << "\tTest Failed!" << endl;
+    } catch(std::invalid_argument & e) {
+        cout << e.what() << endl;
+        return;
+    }
+}
+
+void testIntMultiplication() {
+    cout << "Testing multiplication of INTEGER matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    
+    // Make the matrices.
+    auto pair1 = generateRandomMatrix<int>(20, 30, 20, 30);
+    Matrix<int> & A = pair1.first;
+    EigenMat<int> & ACond = pair1.second;
+    
+    auto pair2 = generateRandomMatrix<int>(A.Columns(), A.Columns(), 20, 30);
+    Matrix<int> & B = pair2.first;
+    EigenMat<int> & BCond = pair2.second;
+    
+    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
+    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
+    
+    cout << endl;
+    
+    //Multiply!
+    try {
+        Matrix<int> result = A * B;
+        EigenMat<int> resultsCond = ACond * BCond;
         
         //Verify.
         if(result == resultsCond)

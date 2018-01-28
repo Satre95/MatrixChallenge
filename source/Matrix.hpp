@@ -10,6 +10,7 @@
 #include "xmmintrin.h"
 #include "pmmintrin.h"
 #include "emmintrin.h"
+#include "smmintrin.h"
 #endif
 
 #define ROUND_UP(NUM, FACTOR) ((((NUM) + (FACTOR) - 1) / (FACTOR)) * (FACTOR))
@@ -193,10 +194,21 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
             } else if(std::is_same<int, T>::value) {
                 
             } else if(std::is_same<unsigned int, T>::value) {
+                for (; k + 3 < m_columns; k+=4) {
+                    __m128i colVec = _mm_load_si128((__m128i*)colB + k);
+                    __m128i rowVec = _mm_load_si128((__m128i*)rowData + k);
+                    __m128i product = _mm_mullo_epi32(colVec, rowVec);
+                    //Unfortunately, there is not horizontal add fn for ints, so
+                    //need to extract and sum scalar wise
+                    int tempVec[4];
+                    _mm_storeu_si128((__m128i*)&tempVec, product);
+                    for(size_t m = 0; m < 4; m++)
+                        res += tempVec[m];
+                }
                 
             } else if(std::is_same<float, T>::value) {
                 //Process using SIMD
-                for(k = 0; k + 3 < m_columns; k+=4) {
+                for(; k + 3 < m_columns; k+=4) {
                     __m128 colVec = _mm_load_ps((float *)(colB + k));
                     __m128 rowVec = _mm_load_ps((float *)(rowData + k));
                     __m128 prodSum = _mm_mul_ps(colVec, rowVec);
@@ -214,7 +226,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
                     
                 }
             } else if(std::is_same<double, T>::value) {
-                for(k = 0; k + 1 < m_columns; k+=2) {
+                for(; k + 1 < m_columns; k+=2) {
                     __m128d colVec = _mm_load_pd((double *)(colB + k));
                     __m128d rowVec = _mm_load_pd((double *)(rowData + k));
                     __m128d prodSum = _mm_mul_pd(colVec, rowVec);

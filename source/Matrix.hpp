@@ -11,7 +11,6 @@
 #endif
 
 #define ROUND_UP(NUM, FACTOR) ((((NUM) + (FACTOR) - 1) / (FACTOR)) * (FACTOR))
-#define CHECK_PTR(PTR) ((uintptr_t)PTR % 0x10 == 0)
 
 template <class T>
 class Matrix
@@ -37,7 +36,7 @@ public:
     Matrix Transpose() const;   
 private:
 	/// Converts the 2D element coord to a 1D index
-	// size_t Index(const size_t & x, const size_t & y) const;
+	size_t Index(const size_t & x, const size_t & y) const;
     /// Returns the vector of pointers to elements in the row at the given index.
     std::vector<T*> GetRow(size_t row);
     /// Returns a pointer to the first element in a column.
@@ -102,34 +101,28 @@ Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(othe
 
 template <class T>
 Matrix<T>::~Matrix() {
-	// std::free(m_data);
     std::free(m_rawData);
     m_data = nullptr;
     m_rawData = nullptr;
 }
 
-// template <class T>
-// size_t Matrix<T>::Index(const size_t & row, const size_t & col) const {
-//     return col * m_rowsAllocated + row; // Matrix is stored in COLUMN major
-// }
+template <class T>
+size_t Matrix<T>::Index(const size_t & row, const size_t & col) const {
+    return col * m_rowsAllocated + row; // Matrix is stored in COLUMN major
+}
 
 template <class T>
 const T & Matrix<T>::Get(size_t row, size_t col) const {
 	if(row >= m_rows || col >= m_columns)
         throw std::invalid_argument( "Invalid element coordinate" );
-    auto ptr = m_data + (col * m_rowsAllocated + row);
-    const T & val = *ptr;
-    return val;
+    return *(m_data + Index(row, col));
 }
 
 template <class T>
 T & Matrix<T>::Get(size_t row, size_t col) {
     if(row >= m_rows || col >= m_columns)
         throw std::invalid_argument( "Invalid element coordinate" );
-
-    auto ptr = m_data + (col * m_rowsAllocated + row);
-    T & val = *ptr;
-    return val;
+    return *(m_data + Index(row, col));
 }
 
 template <class T>
@@ -175,26 +168,24 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //Since matrices are stored in column major, need to copy row to 
     //contiguous 16-byte aligned memory. Recycle the array
     void * rawRowData = std::malloc(m_columnSize + 15);
-    T * rowData = (T*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F);
+    float * rowData = static_cast<float*>((void*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F));
 
-    // #pragma omp parallel for
+    #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
         for (size_t j = 0; j < rhs.m_columns; j++) {
             auto rowA = GetRow(i);
             //Copy the row elements into a contiguous array.
             for(size_t h = 0; h < m_columns; h++) {
                 auto elemPtr = rowA.at(h);
-                rowData[h] = *elemPtr;
+                rowData[h] = static_cast<float>(*elemPtr);
             }
             //Get the column data.           
-            const T* colB = rhs.GetColumn(j);
-
-            if(!CHECK_PTR(colB))
-                std::cout << "UNALIGNED COLUMN POINTER!!" << std::endl;
+            const float* colB = static_cast<const float*>((void*)rhs.GetColumn(j));
             
             T res = 0;
             size_t k = 0;
             
+            //Process using SIMD
             for(k = 0; k + 3 < m_columns; k+=4) {
                 __m128 colVec = _mm_load_ps(colB + k);
                 __m128 rowVec = _mm_load_ps(rowData + k);
@@ -214,7 +205,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
                 res += static_cast<T>(temp);
                
             }
-
+            //Process the remainder values using standard scalar arithmetic.
             for(; k < m_columns; k++)
                 res += static_cast<T>(rowData[k] * colB[k]);
             

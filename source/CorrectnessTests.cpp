@@ -86,10 +86,10 @@ void testInvalidMultiplication() {
     cout << "to the number of columns in B, so multiplication is not possible." << endl;
 
     // Make the matrices.    
-    auto pair1 = generateRandomMatrix<int>(200, 400, 200, 400);
+    auto pair1 = generateRandomMatrix<int>(100, 200, 100, 200);
     Matrix<int> & A = pair1.first;
     
-    auto pair2 = generateRandomMatrix<int>(A.Columns() - 1, A.Columns() - 1, 200, 500);
+    auto pair2 = generateRandomMatrix<int>(A.Columns() - 1, A.Columns() - 1, 100, 200);
     Matrix<int> & B = pair2.first;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;

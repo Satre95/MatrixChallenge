@@ -5,9 +5,11 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <type_traits>
 #ifdef USE_INTRINSICS
 #include "xmmintrin.h"
 #include "pmmintrin.h"
+#include "emmintrin.h"
 #endif
 
 #define ROUND_UP(NUM, FACTOR) ((((NUM) + (FACTOR) - 1) / (FACTOR)) * (FACTOR))
@@ -168,7 +170,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //Since matrices are stored in column major, need to copy row to 
     //contiguous 16-byte aligned memory. Recycle the array
     void * rawRowData = std::malloc(m_columnSize + 15);
-    float * rowData = static_cast<float*>((void*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F));
+    T * rowData = (T*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F);
 
     #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
@@ -177,37 +179,56 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
             //Copy the row elements into a contiguous array.
             for(size_t h = 0; h < m_columns; h++) {
                 auto elemPtr = rowA.at(h);
-                rowData[h] = static_cast<float>(*elemPtr);
+                rowData[h] = *elemPtr;
             }
             //Get the column data.           
-            const float* colB = static_cast<const float*>((void*)rhs.GetColumn(j));
+            const T* colB = rhs.GetColumn(j);
             
             T res = 0;
             size_t k = 0;
             
-            //Process using SIMD
-            for(k = 0; k + 3 < m_columns; k+=4) {
-                __m128 colVec = _mm_load_ps(colB + k);
-                __m128 rowVec = _mm_load_ps(rowData + k);
-                __m128 prodSum = _mm_mul_ps(colVec, rowVec);
-                 //The _mm_hadd_ps only adds adjacent elements, so run twice to get
-                //full horizontal add.
-                //prodsum = { p3, p2, p1, p0 }
-                prodSum = _mm_hadd_ps(prodSum, prodSum);
-                //prodSum = { p3 + p2, p1 + p0, p3 + p2, p1 + p0 }
-                prodSum = _mm_hadd_ps(prodSum, prodSum);
-                //prodSum = { p3 + p2 + p1 + p0, p3 + p2 + p1 + p0, p3 + p2 + p1 + p0, p3 + p2 + p1 + p0 }
-                //Other sums are superfluous but don't incur penalty.
+            //Need to handle each type separately for SIMD.
+            if (std::is_same<short, T>::value) {
                 
-                float temp;
-                _mm_store_ss(&temp, prodSum);
-
-                res += static_cast<T>(temp);
-               
+            } else if(std::is_same<int, T>::value) {
+                
+            } else if(std::is_same<unsigned int, T>::value) {
+                
+            } else if(std::is_same<float, T>::value) {
+                //Process using SIMD
+                for(k = 0; k + 3 < m_columns; k+=4) {
+                    __m128 colVec = _mm_load_ps((float *)(colB + k));
+                    __m128 rowVec = _mm_load_ps((float *)(rowData + k));
+                    __m128 prodSum = _mm_mul_ps(colVec, rowVec);
+                    //The _mm_hadd_ps only adds adjacent elements, so run twice to get
+                    //full horizontal add.
+                    //prodsum = { p3, p2, p1, p0 }
+                    prodSum = _mm_hadd_ps(prodSum, prodSum);
+                    //prodSum = { p3 + p2, p1 + p0, p3 + p2, p1 + p0 }
+                    prodSum = _mm_hadd_ps(prodSum, prodSum);
+                    //prodSum = { p3 + p2 + p1 + p0, p3 + p2 + p1 + p0, p3 + p2 + p1 + p0, p3 + p2 + p1 + p0 }
+                    //Other sums are superfluous but don't incur penalty.
+                    float temp;
+                    _mm_store_ss(&temp, prodSum);
+                    res += temp;
+                    
+                }
+            } else if(std::is_same<double, T>::value) {
+                for(k = 0; k + 1 < m_columns; k+=2) {
+                    __m128d colVec = _mm_load_pd((double *)(colB + k));
+                    __m128d rowVec = _mm_load_pd((double *)(rowData + k));
+                    __m128d prodSum = _mm_mul_pd(colVec, rowVec);
+                    prodSum = _mm_hadd_pd(prodSum, prodSum);
+                    double temp;
+                    _mm_store_sd(&temp, prodSum);
+                    res += temp;
+                    
+                }
             }
+            
             //Process the remainder values using standard scalar arithmetic.
             for(; k < m_columns; k++)
-                res += static_cast<T>(rowData[k] * colB[k]);
+                res += (rowData[k] * colB[k]);
             
             result(i, j) = res;
         }

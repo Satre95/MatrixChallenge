@@ -20,6 +20,7 @@ template <class T>
 pair<Matrix<T>, EigenMat<T>> generateRandomMatrix(int rowsMin = 10, int rowsMax = 20, int colsMin = 10, int colsMax = 20);
 
 void testFloatMultiplication();
+void testDoubleMultiplication();
 void testInvalidMultiplication();
 void testTranspose();
 
@@ -36,26 +37,34 @@ int main() {
     
 
     cout << sectionBreak;
-    testFloatMultiplication();
+//    testFloatMultiplication();
+//    cout << sectionBreak;
+    testDoubleMultiplication();
+//    cout << sectionBreak;
+//    testInvalidMultiplication();
+//    cout << sectionBreak;
+//    testTranspose();
     cout << sectionBreak;
-    testInvalidMultiplication();
-    cout << sectionBreak;
-    testTranspose();
-    cout << sectionBreak;
+    
+    cout << "short: " << sizeof(short) << " bytes" << endl;
+    cout << "double: " << sizeof(double) << " bytes" << endl;
+    cout << "unsigned int: " << sizeof(unsigned int) << " bytes" << endl;
+    cout << "long: " << sizeof(long) << " bytes" << endl;
+
     
 	return 0;
 }
 
 void testFloatMultiplication() {
-    cout << "Testing multiplication of arbitrary size matrices." << endl;
+    cout << "Testing multiplication of SINGLE PRECISION floating point matrices." << endl;
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
 
     // Make the matrices.    
-    auto pair1 = generateRandomMatrix<float>(22,22,22,22);
+    auto pair1 = generateRandomMatrix<float>(20, 30, 20, 30);
     Matrix<float> & A = pair1.first;
     EigenMat<float> & ACond = pair1.second;
     
-    auto pair2 = generateRandomMatrix<float>(A.Columns(), A.Columns(), 22, 22);
+    auto pair2 = generateRandomMatrix<float>(A.Columns(), A.Columns(), 20, 30);
     Matrix<float> & B = pair2.first;
     EigenMat<float> & BCond = pair2.second;
 
@@ -80,17 +89,51 @@ void testFloatMultiplication() {
     }
 }
 
+void testDoubleMultiplication() {
+    cout << "Testing multiplication of DOUBLE PRECISION floating point matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    
+    // Make the matrices.
+    auto pair1 = generateRandomMatrix<double>(20, 30, 20, 30);
+    Matrix<double> & A = pair1.first;
+    EigenMat<double> & ACond = pair1.second;
+    
+    auto pair2 = generateRandomMatrix<double>(A.Columns(), A.Columns(), 20, 30);
+    Matrix<double> & B = pair2.first;
+    EigenMat<double> & BCond = pair2.second;
+    
+    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
+    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
+    
+    cout << endl;
+    
+    //Multiply!
+    try {
+        Matrix<double> result = A * B;
+        EigenMat<double> resultsCond = ACond * BCond;
+        
+        //Verify.
+        if(result == resultsCond)
+            cout << "\tTest Passed!" << endl;
+        else
+            cout << "\tTest Failed!" << endl;
+    } catch(std::invalid_argument & e) {
+        cout << e.what() << endl;
+        return;
+    }
+}
+
 void testInvalidMultiplication() {
     cout << "This tests the case where the number of columns in matrix A "
         << "is not equal " << endl;
     cout << "to the number of columns in B, so multiplication is not possible." << endl;
 
     // Make the matrices.    
-    auto pair1 = generateRandomMatrix<int>(100, 200, 100, 200);
-    Matrix<int> & A = pair1.first;
+    auto pair1 = generateRandomMatrix<float>(50, 100, 50, 100);
+    Matrix<float> & A = pair1.first;
     
-    auto pair2 = generateRandomMatrix<int>(A.Columns() - 1, A.Columns() - 1, 100, 200);
-    Matrix<int> & B = pair2.first;
+    auto pair2 = generateRandomMatrix<float>(A.Columns() - 1, A.Columns() - 1, 50, 100);
+    Matrix<float> & B = pair2.first;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
     cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
@@ -109,8 +152,8 @@ void testInvalidMultiplication() {
 void testTranspose() {
     cout << "Testing the transpose function of an arbitrarily large matrix." << endl;
 
-    auto pair = generateRandomMatrix<int>(200, 400, 200, 400);
-    Matrix<int> & A = pair.first;
+    auto pair = generateRandomMatrix<float>(50, 100, 50, 100);
+    Matrix<float> & A = pair.first;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
 

@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #ifdef USE_INTRINSICS
@@ -17,7 +18,7 @@ class Matrix
 {
 public:
     Matrix(size_t numRows = 4, size_t numCols = 4, T defaultValue = 0);
-    // Matrix(const Matrix & other);
+    Matrix(const Matrix & other);
 	~Matrix();
 	
     /// Fetches the element at the given coordinates
@@ -36,7 +37,7 @@ public:
     Matrix Transpose() const;   
 private:
 	/// Converts the 2D element coord to a 1D index
-	size_t Index(const size_t & x, const size_t & y) const;
+	// size_t Index(const size_t & x, const size_t & y) const;
     /// Returns the vector of pointers to elements in the row at the given index.
     std::vector<T*> GetRow(size_t row);
     /// Returns a pointer to the first element in a column.
@@ -86,22 +87,18 @@ Matrix<T>::Matrix(size_t numRows, size_t numCols, T defaultValue): m_rows(numRow
     m_rawData = std::malloc(byteAmount);
     m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
 	std::fill(m_data, m_data + (numRows * numCols), defaultValue);
-
-    std::cout << "Raw Data Ptr: " << m_rawData << std::endl;
-    std::cout << "Type Data Ptr: " << m_data << std::endl;
-    std::cout << "m_data % 16 = " << (uintptr_t)m_data % 16 << std::endl;
 }
 
-// template <class T>
-// Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(other.m_columns) {
-//     //SSE2 requires floating point mem to be aligned on 16-byte boundary, so round up.
-//     size_t byteAmount = m_rows * m_columns * sizeof(T);
-//     //Round up to be a multiple of 16.
-//     byteAmount = ((byteAmount + 15) / 16) * 16;
-//     m_rawData = std::malloc(byteAmount);
-//     m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
-//     std::copy(other.m_data, other.m_data + (m_rows * m_columns), m_data);
-// }
+template <class T>
+Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(other.m_columns) {
+    m_columnsAllocated = other.m_columnsAllocated; m_rowsAllocated = other.m_rowsAllocated;
+    m_rowSize = other.m_rowSize; m_columnSize = other.m_columnSize;
+
+    size_t byteAmount = m_rowSize * m_rows * m_columnSize * m_columns;
+    m_rawData = std::malloc(byteAmount);
+    m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
+    std::memcpy(m_rawData, other.m_rawData, byteAmount);
+}
 
 template <class T>
 Matrix<T>::~Matrix() {
@@ -111,33 +108,28 @@ Matrix<T>::~Matrix() {
     m_rawData = nullptr;
 }
 
-template <class T>
-size_t Matrix<T>::Index(const size_t & row, const size_t & col) const {
-    return col * m_rowsAllocated + row; // Matrix is stored in COLUMN major
-}
+// template <class T>
+// size_t Matrix<T>::Index(const size_t & row, const size_t & col) const {
+//     return col * m_rowsAllocated + row; // Matrix is stored in COLUMN major
+// }
 
 template <class T>
 const T & Matrix<T>::Get(size_t row, size_t col) const {
 	if(row >= m_rows || col >= m_columns)
         throw std::invalid_argument( "Invalid element coordinate" );
-    auto index = Index(row, col);
-    auto ptr = m_data + index;
-    // if(!CHECK_PTR(ptr)) 
-    //     std::cout << "UNALIGNED PTR!! Get" << std::endl;
-
-	return *(m_data + Index(row, col));
+    auto ptr = m_data + (col * m_rowsAllocated + row);
+    const T & val = *ptr;
+    return val;
 }
 
 template <class T>
 T & Matrix<T>::Get(size_t row, size_t col) {
     if(row >= m_rows || col >= m_columns)
         throw std::invalid_argument( "Invalid element coordinate" );
-    auto index = Index(row, col);
-    auto ptr = m_data + index;
-    // if(!CHECK_PTR(ptr)) 
-    //     std::cout << "UNALIGNED PTR!! Get" << std::endl;
 
-    return *(m_data + Index(row, col));
+    auto ptr = m_data + (col * m_rowsAllocated + row);
+    T & val = *ptr;
+    return val;
 }
 
 template <class T>
@@ -145,8 +137,10 @@ std::vector<T*> Matrix<T>::GetRow(size_t rowIndex) {
     // This method is called only by fns that error check, so no need to check rowIndex
     std::vector<T*> row;
     row.reserve(m_columns);
-    for(size_t i = 0; i < m_columns; i++)
-        row.push_back(&Get(rowIndex, i));
+    for(size_t i = 0; i < m_columns; i++) {
+        auto ptr = &Get(rowIndex, i);
+        row.push_back(ptr);
+    }
     
     return row;
 }
@@ -156,8 +150,6 @@ template <class T>
 T* Matrix<T>::GetColumn(size_t colIndex) {
     // This method is called only by fns that error check, so no need to check colIndex
     auto ptr = m_data + colIndex * m_rowsAllocated;
-    if(!CHECK_PTR(ptr)) 
-        std::cout << "UNALIGNED PTR!! Get Col" << std::endl;
     return ptr;
 }
 
@@ -166,8 +158,6 @@ template <class T>
 const T* Matrix<T>::GetColumn(size_t colIndex) const {
     // This method is called only by fns that error check, so no need to check colIndex
     auto ptr = m_data + colIndex * m_rowsAllocated;
-    if(!CHECK_PTR(ptr)) 
-        std::cout << "UNALIGNED PTR!! Get Col" << std::endl;
     return ptr;
 }
 
@@ -192,13 +182,15 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
         for (size_t j = 0; j < rhs.m_columns; j++) {
             auto rowA = GetRow(i);
             //Copy the row elements into a contiguous array.
-            for(size_t h = 0; h < m_columns; h++)
-                rowData[h] = *(rowA.at(h));
+            for(size_t h = 0; h < m_columns; h++) {
+                auto elemPtr = rowA.at(h);
+                rowData[h] = *elemPtr;
+            }
             //Get the column data.           
             const T* colB = rhs.GetColumn(j);
 
             if(!CHECK_PTR(colB))
-                std::cout << "UNALIGNED POINTER!!" << std::endl;
+                std::cout << "UNALIGNED COLUMN POINTER!!" << std::endl;
             
             T res = 0;
             size_t k = 0;
@@ -222,6 +214,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
                 res += static_cast<T>(temp);
                
             }
+
             for(; k < m_columns; k++)
                 res += static_cast<T>(rowData[k] * colB[k]);
             

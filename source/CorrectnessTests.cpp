@@ -5,17 +5,21 @@
 #include "Rand.hpp"
 
 using namespace std;
-typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> EigenMat;
+template<class T>
+using EigenMat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
 std::mt19937 Rand::sBase( time(nullptr) );
 std::uniform_real_distribution<float> Rand::sFloatGen;
 
-bool operator==(const Matrix<float> & A, const EigenMat & B);
-bool operator==(const Matrix<float> & A, const Matrix<float> & B);
+template<class T>
+bool operator==(const Matrix<T> & A, const EigenMat<T> & B);
+template<class T>
+bool operator==(const Matrix<T> & A, const Matrix<T> & B);
 
-pair<Matrix<float>, EigenMat> generateRandomMatrix(int rowsMin = 10, int rowsMax = 20, int colsMin = 10, int colsMax = 20);
+template <class T>
+pair<Matrix<T>, EigenMat<T>> generateRandomMatrix(int rowsMin = 10, int rowsMax = 20, int colsMin = 10, int colsMax = 20);
 
-void testMultiplication();
+void testFloatMultiplication();
 void testInvalidMultiplication();
 void testTranspose();
 
@@ -32,28 +36,28 @@ int main() {
     
 
     cout << sectionBreak;
-    testMultiplication();
+    testFloatMultiplication();
     cout << sectionBreak;
-    // testInvalidMultiplication();
-    // cout << sectionBreak;
-    // testTranspose();
-    // cout << sectionBreak;
+    testInvalidMultiplication();
+    cout << sectionBreak;
+    testTranspose();
+    cout << sectionBreak;
     
 	return 0;
 }
 
-void testMultiplication() {
+void testFloatMultiplication() {
     cout << "Testing multiplication of arbitrary size matrices." << endl;
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
 
     // Make the matrices.    
-    auto pair1 = generateRandomMatrix(22, 22, 22, 22);
+    auto pair1 = generateRandomMatrix<float>(22,22,22,22);
     Matrix<float> & A = pair1.first;
-    EigenMat & ACond = pair1.second;
+    EigenMat<float> & ACond = pair1.second;
     
-    auto pair2 = generateRandomMatrix(A.Columns(), A.Columns(), 22, 22);
+    auto pair2 = generateRandomMatrix<float>(A.Columns(), A.Columns(), 22, 22);
     Matrix<float> & B = pair2.first;
-    EigenMat & BCond = pair2.second;
+    EigenMat<float> & BCond = pair2.second;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
     cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
@@ -63,7 +67,7 @@ void testMultiplication() {
     //Multiply!
     try {
         Matrix<float> result = A * B;
-        EigenMat resultsCond = ACond * BCond;
+        EigenMat<float> resultsCond = ACond * BCond;
         
         //Verify.
         if(result == resultsCond)
@@ -82,11 +86,11 @@ void testInvalidMultiplication() {
     cout << "to the number of columns in B, so multiplication is not possible." << endl;
 
     // Make the matrices.    
-    auto pair1 = generateRandomMatrix(200, 400, 200, 400);
-    Matrix<float> & A = pair1.first;
+    auto pair1 = generateRandomMatrix<int>(200, 400, 200, 400);
+    Matrix<int> & A = pair1.first;
     
-    auto pair2 = generateRandomMatrix(A.Columns() - 1, A.Columns() - 1, 200, 500);
-    Matrix<float> & B = pair2.first;
+    auto pair2 = generateRandomMatrix<int>(A.Columns() - 1, A.Columns() - 1, 200, 500);
+    Matrix<int> & B = pair2.first;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
     cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
@@ -105,12 +109,12 @@ void testInvalidMultiplication() {
 void testTranspose() {
     cout << "Testing the transpose function of an arbitrarily large matrix." << endl;
 
-    auto pair = generateRandomMatrix(200, 400, 200, 400);
-    Matrix<float> & A = pair.first;
+    auto pair = generateRandomMatrix<int>(200, 400, 200, 400);
+    Matrix<int> & A = pair.first;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
 
-    Matrix<float> B = A.Transpose();
+    auto B = A.Transpose();
     cout << "\tThe transpose of Matrix A is " << B.Rows() << "x" << B.Columns() << endl;
 
     cout << endl;
@@ -128,7 +132,7 @@ void testTranspose() {
     }
 
     //Transpose of a transpose should give back the original matrix.
-    Matrix<float> C = B.Transpose();
+    auto C = B.Transpose();
     if(!(A == C)) {
         cout << "\tTest Failed!" << endl;
         cout << "\tTranspose of a transpose should yield the orignal matrix." << endl;
@@ -139,7 +143,8 @@ void testTranspose() {
 }
 
 
-bool operator==(const Matrix<float> & A, const EigenMat & B) {
+template<class T>
+bool operator==(const Matrix<T> & A, const EigenMat<T> & B) {
     for (size_t i = 0; i < A.Rows(); i++) {
         for (size_t j = 0; j < A.Columns(); j++) {
             if(A(i, j) != B(i, j)) return false;
@@ -148,7 +153,8 @@ bool operator==(const Matrix<float> & A, const EigenMat & B) {
     return true;
 }
 
-bool operator==(const Matrix<float> & A, const Matrix<float> & B) {
+template<class T>
+bool operator==(const Matrix<T> & A, const Matrix<T> & B) {
     for (size_t i = 0; i < A.Rows(); i++) {
         for (size_t j = 0; j < A.Columns(); j++) {
             if(A(i, j) != B(i, j)) return false;
@@ -157,16 +163,17 @@ bool operator==(const Matrix<float> & A, const Matrix<float> & B) {
     return true;
 }
 
-pair<Matrix<float>, EigenMat> generateRandomMatrix(int rowsMin, int rowsMax, int colsMin, int colsMax) {
+template <class T>
+pair<Matrix<T>, EigenMat<T>> generateRandomMatrix(int rowsMin, int rowsMax, int colsMin, int colsMax) {
     int rows = Rand::randInt(rowsMin, rowsMax);
     int columns = Rand::randInt(colsMin, colsMax);
 
-    Matrix<float> A(rows, columns);
-    EigenMat ACond(rows, columns);
+    Matrix<T> A(rows, columns);
+    EigenMat<T> ACond(rows, columns);
 
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < columns; j++) {
-            auto var = Rand::randInt(100);
+            auto var = static_cast<T>(Rand::randInt(100));
             A(i, j) = var; ACond(i,j) = var;
         }
     }

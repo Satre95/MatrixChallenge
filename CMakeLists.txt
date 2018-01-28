@@ -10,7 +10,7 @@ if(USE_SIMD)
 # Add it to the compile definitions if we do.
     if(SSE2_AVAILABLE)
         message("Compiling with SSE2 support")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
         add_definitions(-DUSE_INTRINSICS)
     endif()
 endif()

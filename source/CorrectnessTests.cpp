@@ -1,8 +1,6 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <utility>
-#include <chrono>
-#include <thread>
 #include "Matrix.hpp"
 #include "Rand.hpp"
 
@@ -27,9 +25,6 @@ template <class T> void testTranspose();
 
 char sectionBreak[81];
 
-using namespace std::chrono_literals;
-
-
 int main() {
     std::fill(sectionBreak, sectionBreak + 79, '=');
     sectionBreak[79] = '\n';
@@ -39,20 +34,17 @@ int main() {
     cout << "It does not measure execution time. See the profile program for execution timing." << endl;
     cout << "The Eigen mathematics library is used for verification." << endl;
     
-
     cout << sectionBreak;
     
     cout << "Testing multiplication of FLOAT matrices." << endl;
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
     testMultiplication<float>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
-//    cout << "Testing multiplication of DOUBLE matrices." << endl;
-//    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-//    testMultiplication<double>();
-//    cout << sectionBreak;
+    cout << "Testing multiplication of DOUBLE matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<double>();
+    cout << sectionBreak;
 
     cout << "Testing multiplication of INTEGER matrices." << endl;
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
@@ -69,10 +61,10 @@ int main() {
     testMultiplication<short>();
     cout << sectionBreak;
     
-//    cout << "Testing multiplication of LONG matrices." << endl;
-//    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-//    testMultiplication<long>();
-//    cout << sectionBreak;
+    cout << "Testing multiplication of LONG matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<long>();
+    cout << sectionBreak;
     
     cout << "Testing multiplication of matrices, where there is no valid multiplication." << endl;
     testInvalidMultiplication();

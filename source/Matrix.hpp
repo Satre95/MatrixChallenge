@@ -13,8 +13,6 @@
 #include "smmintrin.h"
 #endif
 
-// #define ROUND_UP(NUM, FACTOR) ((((NUM) + (FACTOR) - 1) / (FACTOR)) * (FACTOR))
-
 template <class T>
 class Matrix
 {
@@ -51,72 +49,37 @@ private:
 	/// The # of columns in this matrix.
 	const size_t m_columns;
 
-    /// The actual amount of rows allocated, for 16-byte alignment.
-    // size_t m_rowsAllocated = 0;
-    /// The actual amount of columns allocated for 16-byte alignment.
-    // size_t m_columnsAllocated = 0;
-
 	/**
 	 * The array holding the elements.
 	 * 1D array is more efficient than a 2D array with 
 	 * separately allocated lines.
 	 */
 	T * m_data = nullptr;
-
-    /// A raw pointer holding the first addr of the aligned allocated mem. Only used for
-    /// allocation and deallocation.
-    // void * m_rawData = nullptr;
-    /// The size of the row in bytes, including padding for 16-byte alignment.
-    // size_t m_rowSize = 0;
-    /// The size of the column in bytes, including padding for 16-byte alignment.
-    // size_t m_columnSize = 0;
-	
 };
 
 template <class T>
 Matrix<T>::Matrix(size_t numRows, size_t numCols, T defaultValue): m_rows(numRows), m_columns(numCols) {
     if(numRows * numCols == 0) throw std::invalid_argument("Error. Cannot create matrix with 0 dimension(s)");
-
-    //SSE2 requires floating point mem to be aligned on 16-byte boundary, so round up.
-    // numRows = ROUND_UP(numRows, 16);
-    // numCols = ROUND_UP(numCols, 16);
-    // m_columnsAllocated = numCols; m_rowsAllocated = numRows;
-    // m_columnSize = ROUND_UP(numRows * sizeof(T), 16);
-    // m_rowSize = ROUND_UP(numCols * sizeof(T), 16);
-
-    // size_t byteAmount = ROUND_UP(numRows * numCols * sizeof(T), 16);
-
-    // m_rawData = std::malloc(byteAmount);
-    // m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
+    
     m_data = static_cast<T*>(std::malloc(numRows * numCols * sizeof(T)));
 	std::fill(m_data, m_data + (numRows * numCols), defaultValue);
 }
 
 template <class T>
 Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(other.m_columns) {
-    // m_columnsAllocated = other.m_columnsAllocated; m_rowsAllocated = other.m_rowsAllocated;
-    // m_rowSize = other.m_rowSize; m_columnSize = other.m_columnSize;
-
-    // size_t byteAmount = ROUND_UP(m_columnsAllocated * m_rowsAllocated * sizeof(T), 16);
-    // m_rawData = std::malloc(byteAmount);
-    // m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
     m_data = static_cast<T*>(std::malloc(m_rows * m_columns * sizeof(T)));
-    // std::copy(other.m_data, other.m_data + (m_rowsAllocated * m_columnsAllocated), m_data);
     std::copy(other.m_data, other.m_data + (m_rows * m_columns), m_data);
 }
 
 template <class T>
 Matrix<T>::~Matrix() {
     std::free(m_data);
-    // std::free(m_rawData);
     m_data = nullptr;
-    // m_rawData = nullptr;
 }
 
 template <class T>
 size_t Matrix<T>::Index(const size_t & row, const size_t & col) const {
-    // return col * m_rowsAllocated + row; // Matrix is stored in COLUMN major
-    return col * m_rows + row;
+    return col * m_rows + row; // Matrix is stored in COLUMN major
 }
 
 template <class T>
@@ -175,11 +138,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
 
    #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
-        //Since matrices are stored in column major, need to copy row to
-        //contiguous 16-byte aligned memory.
-        // void * rawRowData = std::malloc(m_columnSize + 16);
-        // T * rowData = (T*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F);
-        T * rowData = static_cast<T*>(std::malloc(m_rows));
+        T * rowData = new T[m_columns];
         
         for (size_t j = 0; j < rhs.m_columns; j++) {
             std::vector<T*> rowA = GetRow(i);
@@ -253,7 +212,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
             result(i, j) = res;
             rowA.clear();
         }
-        std::free(rowData);
+        delete[] rowData;
     }
     
     return result;

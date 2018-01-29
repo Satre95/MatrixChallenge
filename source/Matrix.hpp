@@ -13,7 +13,7 @@
 #include "smmintrin.h"
 #endif
 
-#define ROUND_UP(NUM, FACTOR) ((((NUM) + (FACTOR) - 1) / (FACTOR)) * (FACTOR))
+// #define ROUND_UP(NUM, FACTOR) ((((NUM) + (FACTOR) - 1) / (FACTOR)) * (FACTOR))
 
 template <class T>
 class Matrix
@@ -52,9 +52,9 @@ private:
 	const size_t m_columns;
 
     /// The actual amount of rows allocated, for 16-byte alignment.
-    size_t m_rowsAllocated = 0;
+    // size_t m_rowsAllocated = 0;
     /// The actual amount of columns allocated for 16-byte alignment.
-    size_t m_columnsAllocated = 0;
+    // size_t m_columnsAllocated = 0;
 
 	/**
 	 * The array holding the elements.
@@ -65,11 +65,11 @@ private:
 
     /// A raw pointer holding the first addr of the aligned allocated mem. Only used for
     /// allocation and deallocation.
-    void * m_rawData = nullptr;
+    // void * m_rawData = nullptr;
     /// The size of the row in bytes, including padding for 16-byte alignment.
-    size_t m_rowSize = 0;
+    // size_t m_rowSize = 0;
     /// The size of the column in bytes, including padding for 16-byte alignment.
-    size_t m_columnSize = 0;
+    // size_t m_columnSize = 0;
 	
 };
 
@@ -78,55 +78,59 @@ Matrix<T>::Matrix(size_t numRows, size_t numCols, T defaultValue): m_rows(numRow
     if(numRows * numCols == 0) throw std::invalid_argument("Error. Cannot create matrix with 0 dimension(s)");
 
     //SSE2 requires floating point mem to be aligned on 16-byte boundary, so round up.
-    numRows = ROUND_UP(numRows, 16);
-    numCols = ROUND_UP(numCols, 16);
-    m_columnsAllocated = numCols; m_rowsAllocated = numRows;
-    m_columnSize = ROUND_UP(numRows * sizeof(T), 16);
-    m_rowSize = ROUND_UP(numCols * sizeof(T), 16);
+    // numRows = ROUND_UP(numRows, 16);
+    // numCols = ROUND_UP(numCols, 16);
+    // m_columnsAllocated = numCols; m_rowsAllocated = numRows;
+    // m_columnSize = ROUND_UP(numRows * sizeof(T), 16);
+    // m_rowSize = ROUND_UP(numCols * sizeof(T), 16);
 
-    size_t byteAmount = ROUND_UP(numRows * numCols * sizeof(T), 16);
+    // size_t byteAmount = ROUND_UP(numRows * numCols * sizeof(T), 16);
 
-    m_rawData = std::malloc(byteAmount);
-    m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
+    // m_rawData = std::malloc(byteAmount);
+    // m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
+    m_data = static_cast<T*>(std::malloc(numRows * numCols * sizeof(T)));
 	std::fill(m_data, m_data + (numRows * numCols), defaultValue);
 }
 
 template <class T>
 Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(other.m_columns) {
-    m_columnsAllocated = other.m_columnsAllocated; m_rowsAllocated = other.m_rowsAllocated;
-    m_rowSize = other.m_rowSize; m_columnSize = other.m_columnSize;
+    // m_columnsAllocated = other.m_columnsAllocated; m_rowsAllocated = other.m_rowsAllocated;
+    // m_rowSize = other.m_rowSize; m_columnSize = other.m_columnSize;
 
-    size_t byteAmount = ROUND_UP(m_columnsAllocated * m_rowsAllocated * sizeof(T), 16);
-    m_rawData = std::malloc(byteAmount);
-    m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
-    std::copy(other.m_data, other.m_data + (m_rowsAllocated * m_columnsAllocated), m_data);
-//    std::memcpy(m_rawData, other.m_rawData, byteAmount);
+    // size_t byteAmount = ROUND_UP(m_columnsAllocated * m_rowsAllocated * sizeof(T), 16);
+    // m_rawData = std::malloc(byteAmount);
+    // m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
+    m_data = static_cast<T*>(std::malloc(m_rows * m_columns * sizeof(T)));
+    // std::copy(other.m_data, other.m_data + (m_rowsAllocated * m_columnsAllocated), m_data);
+    std::copy(other.m_data, other.m_data + (m_rows * m_columns), m_data);
 }
 
 template <class T>
 Matrix<T>::~Matrix() {
-    std::free(m_rawData);
+    std::free(m_data);
+    // std::free(m_rawData);
     m_data = nullptr;
-    m_rawData = nullptr;
+    // m_rawData = nullptr;
 }
 
 template <class T>
 size_t Matrix<T>::Index(const size_t & row, const size_t & col) const {
-    return col * m_rowsAllocated + row; // Matrix is stored in COLUMN major
+    // return col * m_rowsAllocated + row; // Matrix is stored in COLUMN major
+    return col * m_rows + row;
 }
 
 template <class T>
 const T & Matrix<T>::Get(size_t row, size_t col) const {
 	if(row >= m_rows || col >= m_columns)
         throw std::invalid_argument( "Invalid element coordinate" );
-    return *(m_data + Index(row, col));
+    return m_data[Index(row, col)];
 }
 
 template <class T>
 T & Matrix<T>::Get(size_t row, size_t col) {
     if(row >= m_rows || col >= m_columns)
         throw std::invalid_argument( "Invalid element coordinate" );
-    return *(m_data + Index(row, col));
+    return m_data[Index(row, col)];
 }
 
 template <class T>
@@ -146,7 +150,7 @@ std::vector<T*> Matrix<T>::GetRow(size_t rowIndex) {
 template <class T>
 T* Matrix<T>::GetColumn(size_t colIndex) {
     // This method is called only by fns that error check, so no need to check colIndex
-    auto ptr = m_data + colIndex * m_rowsAllocated;
+    auto ptr = m_data + colIndex * m_rows;
     return ptr;
 }
 
@@ -154,7 +158,7 @@ T* Matrix<T>::GetColumn(size_t colIndex) {
 template <class T>
 const T* Matrix<T>::GetColumn(size_t colIndex) const {
     // This method is called only by fns that error check, so no need to check colIndex
-    auto ptr = m_data + colIndex * m_rowsAllocated;
+    auto ptr = m_data + colIndex * m_rows;
     return ptr;
 }
 
@@ -169,12 +173,13 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //Note that the length of each row is num columns and vice versa.
     Matrix<T> result(m_rows, rhs.m_columns);
 
-//    #pragma omp parallel for
+   #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
         //Since matrices are stored in column major, need to copy row to
         //contiguous 16-byte aligned memory.
-        void * rawRowData = std::malloc(m_columnSize + 16);
-        T * rowData = (T*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F);
+        // void * rawRowData = std::malloc(m_columnSize + 16);
+        // T * rowData = (T*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F);
+        T * rowData = static_cast<T*>(std::malloc(m_rows));
         
         for (size_t j = 0; j < rhs.m_columns; j++) {
             std::vector<T*> rowA = GetRow(i);
@@ -193,8 +198,8 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
             if(std::is_same<float, T>::value) {
                 //Process using SIMD
                 for(; k + 3 < m_columns; k+=4) {
-                    __m128 colVec = _mm_load_ps((float *)(colB + k));
-                    __m128 rowVec = _mm_load_ps((float *)(rowData + k));
+                    __m128 colVec = _mm_loadu_ps((float *)(colB + k));
+                    __m128 rowVec = _mm_loadu_ps((float *)(rowData + k));
                     __m128 prodSum = _mm_mul_ps(colVec, rowVec);
                     //The _mm_hadd_ps only adds adjacent elements, so run twice to get
                     //full horizontal add.
@@ -211,8 +216,8 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
                 }
             } else if(std::is_same<double, T>::value) {
                 for(; k + 1 < m_columns; k+=2) {
-                    __m128d colVec = _mm_load_pd((double *)(colB + k));
-                    __m128d rowVec = _mm_load_pd((double *)(rowData + k));
+                    __m128d colVec = _mm_loadu_pd((double *)(colB + k));
+                    __m128d rowVec = _mm_loadu_pd((double *)(rowData + k));
                     __m128d prodSum = _mm_mul_pd(colVec, rowVec);
                     prodSum = _mm_hadd_pd(prodSum, prodSum);
                     double temp;

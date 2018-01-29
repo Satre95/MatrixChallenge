@@ -19,14 +19,9 @@ bool operator==(const Matrix<T> & A, const Matrix<T> & B);
 template <class T>
 pair<Matrix<T>, EigenMat<T>> generateRandomMatrix(int rowsMin = 10, int rowsMax = 20, int colsMin = 10, int colsMax = 20);
 
-void testFloatMultiplication();
-void testDoubleMultiplication();
-void testIntMultiplication();
-void testUIntMultiplication();
-void testShortMultiplication();
-void testLongMultiplication();
+template <class T> void testMultiplication();
 void testInvalidMultiplication();
-void testTranspose();
+template <class T> void testTranspose();
 
 char sectionBreak[81];
 
@@ -41,106 +36,80 @@ int main() {
     
 
     cout << sectionBreak;
-    testFloatMultiplication();
+    
+    cout << "Testing multiplication of FLOAT matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<float>();
     cout << sectionBreak;
-    testDoubleMultiplication();
+    
+    cout << "Testing multiplication of DOUBLE matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<double>();
     cout << sectionBreak;
-    testIntMultiplication();
+    
+    cout << "Testing multiplication of INTEGER matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<int>();
     cout << sectionBreak;
-    testUIntMultiplication();
+    
+    cout << "Testing multiplication of UNSIGNED INTEGER matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<unsigned int>();
     cout << sectionBreak;
-    testShortMultiplication();
+    
+    cout << "Testing multiplication of SHORT matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<short>();
     cout << sectionBreak;
-    testLongMultiplication();
+    
+    cout << "Testing multiplication of LONG matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    testMultiplication<long>();
     cout << sectionBreak;
+    
+    cout << "Testing multiplication of matrices, where there is no valid multiplication." << endl;
     testInvalidMultiplication();
     cout << sectionBreak;
-    testTranspose();
+    
+    //----------------------------------------
+    
+    cout << "Testing the transpose function of a FLOAT matrix" << endl;
+    testTranspose<float>();
+    cout << sectionBreak;
+    
+    cout << "Testing the transpose function of a DOUBLE matrix" << endl;
+    testTranspose<double>();
+    cout << sectionBreak;
+    
+    cout << "Testing the transpose function of a INT matrix" << endl;
+    testTranspose<int>();
+    cout << sectionBreak;
+    
+    cout << "Testing the transpose function of a UNSIGNED INT matrix" << endl;
+    testTranspose<unsigned int>();
+    cout << sectionBreak;
+    
+    cout << "Testing the transpose function of a SHORT matrix" << endl;
+    testTranspose<short>();
+    cout << sectionBreak;
+    
+    cout << "Testing the transpose function of a LONG matrix" << endl;
+    testTranspose<long>();
     cout << sectionBreak;
     
 	return 0;
 }
 
-void testFloatMultiplication() {
-    cout << "Testing multiplication of SINGLE PRECISION floating point matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-
-    // Make the matrices.    
-    auto pair1 = generateRandomMatrix<float>(20, 30, 20, 30);
-    Matrix<float> & A = pair1.first;
-    EigenMat<float> & ACond = pair1.second;
-    
-    auto pair2 = generateRandomMatrix<float>(A.Columns(), A.Columns(), 20, 30);
-    Matrix<float> & B = pair2.first;
-    EigenMat<float> & BCond = pair2.second;
-
-    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
-    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
-    
-    cout << endl;
-    
-    //Multiply!
-    try {
-        Matrix<float> result = A * B;
-        EigenMat<float> resultsCond = ACond * BCond;
-        
-        //Verify.
-        if(result == resultsCond)
-            cout << "\tTest Passed!" << endl;
-        else
-            cout << "\tTest Failed!" << endl;
-    } catch(std::invalid_argument & e) {
-        cout << e.what() << endl;
-        return;
-    }
-}
-
-void testDoubleMultiplication() {
-    cout << "Testing multiplication of DOUBLE PRECISION floating point matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-    
+template<class T>
+void testMultiplication() {
     // Make the matrices.
-    auto pair1 = generateRandomMatrix<double>(20, 30, 20, 30);
-    Matrix<double> & A = pair1.first;
-    EigenMat<double> & ACond = pair1.second;
+    auto pair1 = generateRandomMatrix<T>(20, 50, 20, 50);
+    Matrix<T> & A = pair1.first;
+    EigenMat<T> & ACond = pair1.second;
     
-    auto pair2 = generateRandomMatrix<double>(A.Columns(), A.Columns(), 20, 30);
-    Matrix<double> & B = pair2.first;
-    EigenMat<double> & BCond = pair2.second;
-    
-    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
-    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
-    
-    cout << endl;
-    
-    //Multiply!
-    try {
-        Matrix<double> result = A * B;
-        EigenMat<double> resultsCond = ACond * BCond;
-        
-        //Verify.
-        if(result == resultsCond)
-            cout << "\tTest Passed!" << endl;
-        else
-            cout << "\tTest Failed!" << endl;
-    } catch(std::invalid_argument & e) {
-        cout << e.what() << endl;
-        return;
-    }
-}
-
-void testIntMultiplication() {
-    cout << "Testing multiplication of INTEGER matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-    
-    // Make the matrices.
-    auto pair1 = generateRandomMatrix<int>(20, 30, 20, 30);
-    Matrix<int> & A = pair1.first;
-    EigenMat<int> & ACond = pair1.second;
-    
-    auto pair2 = generateRandomMatrix<int>(A.Columns(), A.Columns(), 20, 30);
-    Matrix<int> & B = pair2.first;
-    EigenMat<int> & BCond = pair2.second;
+    auto pair2 = generateRandomMatrix<T>(A.Columns(), A.Columns(), 20, 50);
+    Matrix<T> & B = pair2.first;
+    EigenMat<T> & BCond = pair2.second;
     
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
     cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
@@ -149,110 +118,8 @@ void testIntMultiplication() {
     
     //Multiply!
     try {
-        Matrix<int> result = A * B;
-        EigenMat<int> resultsCond = ACond * BCond;
-        
-        //Verify.
-        if(result == resultsCond)
-            cout << "\tTest Passed!" << endl;
-        else
-            cout << "\tTest Failed!" << endl;
-    } catch(std::invalid_argument & e) {
-        cout << e.what() << endl;
-        return;
-    }
-}
-
-void testUIntMultiplication() {
-    cout << "Testing multiplication of UNSIGNED INTEGER matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-    
-    // Make the matrices.
-    auto pair1 = generateRandomMatrix<unsigned int>(20, 30, 20, 30);
-    Matrix<unsigned int> & A = pair1.first;
-    EigenMat<unsigned int> & ACond = pair1.second;
-    
-    auto pair2 = generateRandomMatrix<unsigned int>(A.Columns(), A.Columns(), 20, 30);
-    Matrix<unsigned int> & B = pair2.first;
-    EigenMat<unsigned int> & BCond = pair2.second;
-    
-    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
-    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
-    
-    cout << endl;
-    
-    //Multiply!
-    try {
-        Matrix<unsigned int> result = A * B;
-        EigenMat<unsigned int> resultsCond = ACond * BCond;
-        
-        //Verify.
-        if(result == resultsCond)
-            cout << "\tTest Passed!" << endl;
-        else
-            cout << "\tTest Failed!" << endl;
-    } catch(std::invalid_argument & e) {
-        cout << e.what() << endl;
-        return;
-    }
-}
-
-void testShortMultiplication() {
-    cout << "Testing multiplication of SHORT INTEGER matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-    
-    // Make the matrices.
-    auto pair1 = generateRandomMatrix<short>(20, 30, 20, 30);
-    Matrix<short> & A = pair1.first;
-    EigenMat<short> & ACond = pair1.second;
-    
-    auto pair2 = generateRandomMatrix<short>(A.Columns(), A.Columns(), 20, 30);
-    Matrix<short> & B = pair2.first;
-    EigenMat<short> & BCond = pair2.second;
-    
-    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
-    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
-    
-    cout << endl;
-    
-    //Multiply!
-    try {
-        Matrix<short> result = A * B;
-        EigenMat<short> resultsCond = ACond * BCond;
-        
-        //Verify.
-        if(result == resultsCond)
-            cout << "\tTest Passed!" << endl;
-        else
-            cout << "\tTest Failed!" << endl;
-    } catch(std::invalid_argument & e) {
-        cout << e.what() << endl;
-        return;
-    }
-}
-
-void testLongMultiplication() {
-    cout << "Testing multiplication of LONG INTEGER matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-    
-    // Make the matrices.
-    auto pair1 = generateRandomMatrix<long>(20, 30, 20, 30);
-    Matrix<long> & A = pair1.first;
-    EigenMat<long> & ACond = pair1.second;
-    
-    auto pair2 = generateRandomMatrix<long>(A.Columns(), A.Columns(), 20, 30);
-    Matrix<long> & B = pair2.first;
-    EigenMat<long> & BCond = pair2.second;
-    
-    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
-    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
-    
-    cout << endl;
-    
-    //Multiply!
-    try {
-        Matrix<long> result = A * B;
-        EigenMat<long> resultsCond = ACond * BCond;
+        Matrix<T> result = A * B;
+        EigenMat<T> resultsCond = ACond * BCond;
         
         //Verify.
         if(result == resultsCond)
@@ -266,7 +133,7 @@ void testLongMultiplication() {
 }
 
 void testInvalidMultiplication() {
-    cout << "Testing the case where the number of columns in matrix A "
+    cout << "Number of columns in matrix A "
         << "is not equal " << endl;
     cout << "to the number of columns in B, so multiplication is not possible." << endl;
 
@@ -291,12 +158,10 @@ void testInvalidMultiplication() {
     }
 }
 
-
+template<class T>
 void testTranspose() {
-    cout << "Testing the transpose function of an arbitrarily large matrix." << endl;
-
-    auto pair = generateRandomMatrix<float>(50, 100, 50, 100);
-    Matrix<float> & A = pair.first;
+    auto pair = generateRandomMatrix<T>(50, 100, 50, 100);
+    Matrix<T> & A = pair.first;
 
     cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
 
@@ -345,6 +210,7 @@ bool operator==(const Matrix<T> & A, const EigenMat<T> & B) {
 
 template<class T>
 bool operator==(const Matrix<T> & A, const Matrix<T> & B) {
+#pragma omp parallel for
     for (size_t i = 0; i < A.Rows(); i++) {
         for (size_t j = 0; j < A.Columns(); j++) {
             if(A(i, j) != B(i, j)) return false;
@@ -360,7 +226,8 @@ pair<Matrix<T>, EigenMat<T>> generateRandomMatrix(int rowsMin, int rowsMax, int 
 
     Matrix<T> A(rows, columns);
     EigenMat<T> ACond(rows, columns);
-
+    
+    #pragma omp parallel for
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < columns; j++) {
             auto var = static_cast<T>(Rand::randInt(100));

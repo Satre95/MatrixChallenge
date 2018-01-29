@@ -5,13 +5,13 @@
 #include "Rand.hpp"
 
 using namespace std;
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = std::chrono::time_point<Clock>;
 
 std::mt19937 Rand::sBase( time(nullptr) );
 std::uniform_real_distribution<float> Rand::sFloatGen;
 char sectionBreak[81];
-const int iterations = 20;
-using Clock = std::chrono::high_resolution_clock;
-using TimePoint = std::chrono::time_point<Clock>;
+const int iterations = 100;
 
 template <class T> Matrix<T> generateMatrix();
 
@@ -117,10 +117,8 @@ void profileMatrixTranspose() {
     }
     
 	cout << endl;
-	cout << "Transpose took " << chrono::duration_cast<chrono::microseconds>(total).count() / (1000.f * (float)iterations)
+	cout << "On average, transpose takes " << chrono::duration_cast<chrono::microseconds>(total).count() / (1000.f * (float)iterations)
 		<< " ms" << endl;
-
-
 }
 
 template <class T> Matrix<T> generateMatrix() {

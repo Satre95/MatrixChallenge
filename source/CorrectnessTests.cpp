@@ -102,11 +102,11 @@ int main() {
 template<class T>
 void testMultiplication() {
     // Make the matrices.
-    auto pair1 = generateRandomMatrix<T>(20, 50, 20, 50);
+    auto pair1 = generateRandomMatrix<T>(100, 200, 100, 200);
     Matrix<T> & A = pair1.first;
     EigenMat<T> & ACond = pair1.second;
     
-    auto pair2 = generateRandomMatrix<T>(A.Columns(), A.Columns(), 20, 50);
+    auto pair2 = generateRandomMatrix<T>(A.Columns(), A.Columns(), 100, 200);
     Matrix<T> & B = pair2.first;
     EigenMat<T> & BCond = pair2.second;
     

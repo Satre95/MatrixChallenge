@@ -9,10 +9,16 @@ using namespace std;
 std::mt19937 Rand::sBase( time(nullptr) );
 std::uniform_real_distribution<float> Rand::sFloatGen;
 char sectionBreak[81];
+const int iterations = 20;
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = std::chrono::time_point<Clock>;
 
-Matrix<float> generateRandomMatrix(int rowsMin, int rowsMax, int colsMin, int colsMax);
-void profileLargeMatrixMultiplication();
-void profileLargeMatrixTranspose();
+template <class T> Matrix<T> generateMatrix();
+
+template <class T>
+void profileMatrixMultiplication();
+template<class T>
+void profileMatrixTranspose();
 
 int main() {
     std::fill(sectionBreak, sectionBreak + 79, '=');
@@ -21,65 +27,110 @@ int main() {
 
 
 	cout << "This program measures the execution time of my Matrix class." << endl;
+    cout << "All matrices in this suite are 100x100" << endl;
 	cout << sectionBreak;
-	profileLargeMatrixMultiplication();
+    
+    cout << "Profiling FLOAT matrix multiplication" << endl;
+	profileMatrixMultiplication<float>();
 	cout << sectionBreak;
-	profileLargeMatrixTranspose();
+    
+    cout << "Profiling DOUBLE matrix multiplication" << endl;
+    profileMatrixMultiplication<double>();
+    cout << sectionBreak;
+    
+    cout << "Profiling INT matrix multiplication" << endl;
+    profileMatrixMultiplication<int>();
+    cout << sectionBreak;
+    
+    cout << "Profiling UNSIGNED INT matrix multiplication" << endl;
+    profileMatrixMultiplication<unsigned int>();
+    cout << sectionBreak;
+    
+    cout << "Profiling SHORT matrix multiplication" << endl;
+    profileMatrixMultiplication<short>();
+    cout << sectionBreak;
+    
+    cout << "Profiling LONG matrix multiplication" << endl;
+    profileMatrixMultiplication<long>();
+    cout << sectionBreak;
+    
+    //------------------------------------------------
+    
+    cout << "Profiling FLOAT matrix transpose" << endl;
+    profileMatrixTranspose<float>();
 	cout << sectionBreak;
+    
+    cout << "Profiling DOUBLE matrix transpose" << endl;
+    profileMatrixTranspose<double>();
+    cout << sectionBreak;
+    
+    cout << "Profiling INT matrix transpose" << endl;
+    profileMatrixTranspose<int>();
+    cout << sectionBreak;
+    
+    cout << "Profiling UNSIGNED INT matrix transpose" << endl;
+    profileMatrixTranspose<unsigned int>();
+    cout << sectionBreak;
+    
+    cout << "Profiling SHORT matrix transpose" << endl;
+    profileMatrixTranspose<short>();
+    cout << sectionBreak;
+    
+    cout << "Profiling LONG matrix transpose" << endl;
+    profileMatrixTranspose<long>();
+    cout << sectionBreak;
+    
+    
 	return 0;
 }
 
-void profileLargeMatrixMultiplication() {
-	cout << "This function measures the execution time of very large matrix multiplication" << endl;
-	const int rows = 1600;
-	const int columns = 2000;
+template <class T>
+void profileMatrixMultiplication() {
+    Clock::duration total(0);
+    for (int i = 0; i < iterations; i++) {
+        auto A = generateMatrix<T>();
+        auto B = generateMatrix<T>();
+        
+        auto begin = Clock::now();
+        auto result = A * B;
+        auto end = Clock::now();
+        total += (end - begin);
+    }
 
-	auto A = generateRandomMatrix(rows, rows, columns, columns);
-	auto B = generateRandomMatrix(columns, columns, rows, rows);
-
-	cout << "Matrix A is " << A.Rows() << "x" << A.Columns() << endl;
-	cout << "Matrix B is " << B.Rows() << "x" << B.Columns() << endl;
-
-	auto begin = chrono::high_resolution_clock::now();
-	auto result = A * B;
-	auto end = chrono::high_resolution_clock::now();
 
 	cout << endl;
-	cout << "Multiplication of a " <<  A.Rows() << "x" << A.Columns() << " matrix and a "
-		<< B.Rows() << "x" << B.Columns() << " matrix took " 
-		<< chrono::duration_cast<chrono::microseconds>(end - begin).count() / 1000.f
+	cout << "On average, multiplication takes "
+		<< chrono::duration_cast<chrono::microseconds>(total).count() / (1000.f * (float)iterations)
 		<< " ms" << endl; 
 }
 
-void profileLargeMatrixTranspose() {
-	cout << "This function measures the execution time of very large matrix transposition" << endl;
-	const int rows = 10;
-	const int columns = 20;
+template <class T>
+void profileMatrixTranspose() {
+    Clock::duration total(0);
+    for (int i = 0; i < iterations; i++) {
+        auto A = generateMatrix<T>();
 
-	auto A = generateRandomMatrix(rows, rows, columns, columns);
-	cout << "Matrix A is " << A.Rows() << "x" << A.Columns() << endl;
-
-	auto begin = chrono::high_resolution_clock::now();
-	auto B = A.Transpose();
-	auto end = chrono::high_resolution_clock::now();
-
-	cout << "The transpose of matrix A is " << B.Rows() << "x" << B.Columns() << endl;
+        auto begin = Clock::now();
+        auto B = A.Transpose();
+        auto end = Clock::now();
+        total += (end - begin);
+    }
+    
 	cout << endl;
-	cout << "Transpose took " << chrono::duration_cast<chrono::microseconds>(end - begin).count() / 1000.f
+	cout << "Transpose took " << chrono::duration_cast<chrono::microseconds>(total).count() / (1000.f * (float)iterations)
 		<< " ms" << endl;
 
 
 }
 
-Matrix<float> generateRandomMatrix(int rowsMin, int rowsMax, int colsMin, int colsMax) {
-    int rows = Rand::randInt(rowsMin, rowsMax);
-    int columns = Rand::randInt(colsMin, colsMax);
-
-    Matrix<float> A(rows, columns);
+template <class T> Matrix<T> generateMatrix() {
+    static int rows = 100;
+    static int columns = 100;
+    Matrix<T> A(rows, columns);
 
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < columns; j++) {
-            A(i,j) = Rand::randInt(100);
+            A(i,j) = static_cast<T>(Rand::randInt(100));
         }
     }
 

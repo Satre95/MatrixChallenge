@@ -14,7 +14,7 @@ For example:
 * CMake v3.10 or later is required.
 * if using GCC, I recommend v7.0 or later
 * if using Clang, I recommend v4.0 or later.
-* Code is written against the C++14 standard.
+* Code is written against the C++11 standard.
 
 There are two options that can be set in the build process:
 

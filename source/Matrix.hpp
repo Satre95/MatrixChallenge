@@ -61,19 +61,19 @@ template <class T>
 Matrix<T>::Matrix(size_t numRows, size_t numCols, T defaultValue): m_rows(numRows), m_columns(numCols) {
     if(numRows * numCols == 0) throw std::invalid_argument("Error. Cannot create matrix with 0 dimension(s)");
     
-    m_data = static_cast<T*>(std::malloc(numRows * numCols * sizeof(T)));
+    m_data = new T[numRows * numCols];
 	std::fill(m_data, m_data + (numRows * numCols), defaultValue);
 }
 
 template <class T>
 Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(other.m_columns) {
-    m_data = static_cast<T*>(std::malloc(m_rows * m_columns * sizeof(T)));
+    m_data = new T[m_rows * m_columns];
     std::copy(other.m_data, other.m_data + (m_rows * m_columns), m_data);
 }
 
 template <class T>
 Matrix<T>::~Matrix() {
-    std::free(m_data);
+    delete[] m_data;
     m_data = nullptr;
 }
 

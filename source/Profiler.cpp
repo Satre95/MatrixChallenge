@@ -11,7 +11,7 @@ using TimePoint = std::chrono::time_point<Clock>;
 std::mt19937 Rand::sBase( time(nullptr) );
 std::uniform_real_distribution<float> Rand::sFloatGen;
 char sectionBreak[81];
-const int iterations = 100;
+const int iterations = 300;
 
 template <class T> Matrix<T> generateMatrix();
 
@@ -28,6 +28,8 @@ int main() {
 
 	cout << "This program measures the execution time of my Matrix class." << endl;
     cout << "All matrices in this suite are 100x100" << endl;
+    cout << "For each data type, the op is run " << iterations;
+    cout << " times and the average run time is calculated." << endl;
 	cout << sectionBreak;
     
     cout << "Profiling FLOAT matrix multiplication" << endl;
@@ -92,7 +94,7 @@ void profileMatrixMultiplication() {
         auto B = generateMatrix<T>();
         
         auto begin = Clock::now();
-        auto result = A * B;
+        A * B;
         auto end = Clock::now();
         total += (end - begin);
     }

@@ -22,6 +22,9 @@ pair<Matrix<T>, EigenMat<T>> generateRandomMatrix(int rowsMin = 10, int rowsMax 
 void testFloatMultiplication();
 void testDoubleMultiplication();
 void testIntMultiplication();
+void testUIntMultiplication();
+void testShortMultiplication();
+void testLongMultiplication();
 void testInvalidMultiplication();
 void testTranspose();
 
@@ -43,6 +46,12 @@ int main() {
     testDoubleMultiplication();
     cout << sectionBreak;
     testIntMultiplication();
+    cout << sectionBreak;
+    testUIntMultiplication();
+    cout << sectionBreak;
+    testShortMultiplication();
+    cout << sectionBreak;
+    testLongMultiplication();
     cout << sectionBreak;
     testInvalidMultiplication();
     cout << sectionBreak;
@@ -154,8 +163,110 @@ void testIntMultiplication() {
     }
 }
 
+void testUIntMultiplication() {
+    cout << "Testing multiplication of UNSIGNED INTEGER matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    
+    // Make the matrices.
+    auto pair1 = generateRandomMatrix<unsigned int>(20, 30, 20, 30);
+    Matrix<unsigned int> & A = pair1.first;
+    EigenMat<unsigned int> & ACond = pair1.second;
+    
+    auto pair2 = generateRandomMatrix<unsigned int>(A.Columns(), A.Columns(), 20, 30);
+    Matrix<unsigned int> & B = pair2.first;
+    EigenMat<unsigned int> & BCond = pair2.second;
+    
+    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
+    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
+    
+    cout << endl;
+    
+    //Multiply!
+    try {
+        Matrix<unsigned int> result = A * B;
+        EigenMat<unsigned int> resultsCond = ACond * BCond;
+        
+        //Verify.
+        if(result == resultsCond)
+            cout << "\tTest Passed!" << endl;
+        else
+            cout << "\tTest Failed!" << endl;
+    } catch(std::invalid_argument & e) {
+        cout << e.what() << endl;
+        return;
+    }
+}
+
+void testShortMultiplication() {
+    cout << "Testing multiplication of SHORT INTEGER matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    
+    // Make the matrices.
+    auto pair1 = generateRandomMatrix<short>(20, 30, 20, 30);
+    Matrix<short> & A = pair1.first;
+    EigenMat<short> & ACond = pair1.second;
+    
+    auto pair2 = generateRandomMatrix<short>(A.Columns(), A.Columns(), 20, 30);
+    Matrix<short> & B = pair2.first;
+    EigenMat<short> & BCond = pair2.second;
+    
+    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
+    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
+    
+    cout << endl;
+    
+    //Multiply!
+    try {
+        Matrix<short> result = A * B;
+        EigenMat<short> resultsCond = ACond * BCond;
+        
+        //Verify.
+        if(result == resultsCond)
+            cout << "\tTest Passed!" << endl;
+        else
+            cout << "\tTest Failed!" << endl;
+    } catch(std::invalid_argument & e) {
+        cout << e.what() << endl;
+        return;
+    }
+}
+
+void testLongMultiplication() {
+    cout << "Testing multiplication of LONG INTEGER matrices." << endl;
+    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+    
+    // Make the matrices.
+    auto pair1 = generateRandomMatrix<long>(20, 30, 20, 30);
+    Matrix<long> & A = pair1.first;
+    EigenMat<long> & ACond = pair1.second;
+    
+    auto pair2 = generateRandomMatrix<long>(A.Columns(), A.Columns(), 20, 30);
+    Matrix<long> & B = pair2.first;
+    EigenMat<long> & BCond = pair2.second;
+    
+    cout <<"\tMatrix A is " << A.Rows() << 'x' << A.Columns() << endl;
+    cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
+    
+    cout << endl;
+    
+    //Multiply!
+    try {
+        Matrix<long> result = A * B;
+        EigenMat<long> resultsCond = ACond * BCond;
+        
+        //Verify.
+        if(result == resultsCond)
+            cout << "\tTest Passed!" << endl;
+        else
+            cout << "\tTest Failed!" << endl;
+    } catch(std::invalid_argument & e) {
+        cout << e.what() << endl;
+        return;
+    }
+}
+
 void testInvalidMultiplication() {
-    cout << "This tests the case where the number of columns in matrix A "
+    cout << "Testing the case where the number of columns in matrix A "
         << "is not equal " << endl;
     cout << "to the number of columns in B, so multiplication is not possible." << endl;
 
@@ -179,6 +290,7 @@ void testInvalidMultiplication() {
         cout << "\tTest Passed!" << endl;
     }
 }
+
 
 void testTranspose() {
     cout << "Testing the transpose function of an arbitrarily large matrix." << endl;

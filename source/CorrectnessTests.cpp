@@ -38,22 +38,16 @@ int main() {
     
 
     cout << sectionBreak;
-//    testFloatMultiplication();
-//    cout << sectionBreak;
-//    testDoubleMultiplication();
-//    cout << sectionBreak;
+    testFloatMultiplication();
+    cout << sectionBreak;
+    testDoubleMultiplication();
+    cout << sectionBreak;
     testIntMultiplication();
     cout << sectionBreak;
-//    testInvalidMultiplication();
-//    cout << sectionBreak;
-//    testTranspose();
-//    cout << sectionBreak;
-    
-    cout << "short: " << sizeof(short) << " bytes" << endl;
-    cout << "double: " << sizeof(double) << " bytes" << endl;
-    cout << "unsigned int: " << sizeof(unsigned int) << " bytes" << endl;
-    cout << "long: " << sizeof(long) << " bytes" << endl;
-
+    testInvalidMultiplication();
+    cout << sectionBreak;
+    testTranspose();
+    cout << sectionBreak;
     
 	return 0;
 }
@@ -227,7 +221,11 @@ template<class T>
 bool operator==(const Matrix<T> & A, const EigenMat<T> & B) {
     for (size_t i = 0; i < A.Rows(); i++) {
         for (size_t j = 0; j < A.Columns(); j++) {
-            if(A(i, j) != B(i, j)) return false;
+            if(A(i, j) != B(i, j)) {
+                std::cout << "\tFailing value: " << A(i,j) << endl;
+                std::cout << "\tCorrect value: " << B(i,j) << endl;
+                return false;
+            }
         }
     }
     return true;

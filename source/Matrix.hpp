@@ -189,24 +189,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
             size_t k = 0;
             
             //Need to handle each type separately for SIMD.
-            if (std::is_same<short, T>::value) {
-                
-            } else if(std::is_same<int, T>::value) {
-                
-            } else if(std::is_same<unsigned int, T>::value) {
-                for (; k + 3 < m_columns; k+=4) {
-                    __m128i colVec = _mm_load_si128((__m128i*)colB + k);
-                    __m128i rowVec = _mm_load_si128((__m128i*)rowData + k);
-                    __m128i product = _mm_mullo_epi32(colVec, rowVec);
-                    //Unfortunately, there is not horizontal add fn for ints, so
-                    //need to extract and sum scalar wise
-                    int tempVec[4];
-                    _mm_storeu_si128((__m128i*)&tempVec, product);
-                    for(size_t m = 0; m < 4; m++)
-                        res += tempVec[m];
-                }
-                
-            } else if(std::is_same<float, T>::value) {
+            if(std::is_same<float, T>::value) {
                 //Process using SIMD
                 for(; k + 3 < m_columns; k+=4) {
                     __m128 colVec = _mm_load_ps((float *)(colB + k));
@@ -237,6 +220,25 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
                     
                 }
             }
+            //Unfortunately, Intel SSE intrinsics for integer multiplication & addition
+            //are not as robust as floating point. Given time, I believe there is a way
+            //to write an vector SIMD implementation for integer matrices that is faster
+            //than scalar arithmetic, but it isn't trivial, so I've tabled that for later.
+            /*
+            else if(std::is_same<int, T>::value) {
+                for (; k + 3 < m_columns; k+=4) {
+                    __m128i colVec = _mm_load_si128((__m128i*)colB + k);
+                    __m128i rowVec = _mm_load_si128((__m128i*)rowData + k);
+                    __m128i product = _mm_mullo_epi32(colVec, rowVec);
+                    //Unfortunately, there is not horizontal add fn for ints, so
+                    //need to extract and sum scalar wise
+                    int tempVec[4];
+                    _mm_storeu_si128((__m128i*)&tempVec, product);
+                    for(size_t m = 0; m < 4; m++)
+                        res += tempVec[m];
+                }
+            }
+            */
             
             //Process the remainder values using standard scalar arithmetic.
             for(; k < m_columns; k++)

@@ -84,7 +84,7 @@ Matrix<T>::Matrix(size_t numRows, size_t numCols, T defaultValue): m_rows(numRow
     m_columnSize = ROUND_UP(numRows * sizeof(T), 16);
     m_rowSize = ROUND_UP(numCols * sizeof(T), 16);
 
-    size_t byteAmount = m_rowSize * m_rows * m_columnSize * m_columns;
+    size_t byteAmount = ROUND_UP(numRows * numCols * sizeof(T), 16);
 
     m_rawData = std::malloc(byteAmount);
     m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
@@ -96,10 +96,11 @@ Matrix<T>::Matrix(const Matrix<T> & other): m_rows(other.m_rows), m_columns(othe
     m_columnsAllocated = other.m_columnsAllocated; m_rowsAllocated = other.m_rowsAllocated;
     m_rowSize = other.m_rowSize; m_columnSize = other.m_columnSize;
 
-    size_t byteAmount = m_rowSize * m_rows * m_columnSize * m_columns;
+    size_t byteAmount = ROUND_UP(m_columnsAllocated * m_rowsAllocated * sizeof(T), 16);
     m_rawData = std::malloc(byteAmount);
     m_data = (T*)(((uintptr_t)m_rawData + 15) & ~(uintptr_t)0x0F);
-    std::memcpy(m_rawData, other.m_rawData, byteAmount);
+    std::copy(other.m_data, other.m_data + (m_rowsAllocated * m_columnsAllocated), m_data);
+//    std::memcpy(m_rawData, other.m_rawData, byteAmount);
 }
 
 template <class T>
@@ -168,15 +169,15 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
     //Note that the length of each row is num columns and vice versa.
     Matrix<T> result(m_rows, rhs.m_columns);
 
-    //Since matrices are stored in column major, need to copy row to 
-    //contiguous 16-byte aligned memory. Recycle the array
-    void * rawRowData = std::malloc(m_columnSize + 15);
-    T * rowData = (T*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F);
-
-    #pragma omp parallel for
+//    #pragma omp parallel for
     for (size_t i = 0; i < m_rows; i++) {
+        //Since matrices are stored in column major, need to copy row to
+        //contiguous 16-byte aligned memory.
+        void * rawRowData = std::malloc(m_columnSize + 16);
+        T * rowData = (T*)(((uintptr_t)rawRowData + 15) & ~(uintptr_t)0x0F);
+        
         for (size_t j = 0; j < rhs.m_columns; j++) {
-            auto rowA = GetRow(i);
+            std::vector<T*> rowA = GetRow(i);
             //Copy the row elements into a contiguous array.
             for(size_t h = 0; h < m_columns; h++) {
                 auto elemPtr = rowA.at(h);
@@ -245,10 +246,10 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & rhs) {
                 res += (rowData[k] * colB[k]);
             
             result(i, j) = res;
+            rowA.clear();
         }
+        std::free(rowData);
     }
-
-    std::free(rawRowData);
     
     return result;
 }

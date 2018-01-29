@@ -49,84 +49,60 @@ int main() {
 
     std::this_thread::sleep_for(1s);
     
-    cout << "Testing multiplication of DOUBLE matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-    testMultiplication<double>();
-    cout << sectionBreak;
-    
-    std::this_thread::sleep_for(1s);
+//    cout << "Testing multiplication of DOUBLE matrices." << endl;
+//    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+//    testMultiplication<double>();
+//    cout << sectionBreak;
 
     cout << "Testing multiplication of INTEGER matrices." << endl;
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
     testMultiplication<int>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     cout << "Testing multiplication of UNSIGNED INTEGER matrices." << endl;
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
     testMultiplication<unsigned int>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     cout << "Testing multiplication of SHORT matrices." << endl;
     cout << "Multiplication is guaranteed to be possible for this test." << endl;
     testMultiplication<short>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
-    cout << "Testing multiplication of LONG matrices." << endl;
-    cout << "Multiplication is guaranteed to be possible for this test." << endl;
-    testMultiplication<long>();
-    cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
+//    cout << "Testing multiplication of LONG matrices." << endl;
+//    cout << "Multiplication is guaranteed to be possible for this test." << endl;
+//    testMultiplication<long>();
+//    cout << sectionBreak;
     
     cout << "Testing multiplication of matrices, where there is no valid multiplication." << endl;
     testInvalidMultiplication();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     //----------------------------------------
     
     cout << "Testing the transpose function of a FLOAT matrix" << endl;
     testTranspose<float>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     cout << "Testing the transpose function of a DOUBLE matrix" << endl;
     testTranspose<double>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     cout << "Testing the transpose function of a INT matrix" << endl;
     testTranspose<int>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     cout << "Testing the transpose function of a UNSIGNED INT matrix" << endl;
     testTranspose<unsigned int>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     cout << "Testing the transpose function of a SHORT matrix" << endl;
     testTranspose<short>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
     cout << "Testing the transpose function of a LONG matrix" << endl;
     testTranspose<long>();
     cout << sectionBreak;
-
-    std::this_thread::sleep_for(1s);
     
 	return 0;
 }
@@ -179,7 +155,7 @@ void testInvalidMultiplication() {
     cout <<"\tMatrix B is " << B.Rows() << 'x' << B.Columns() << endl;
 
     try {
-        auto result = A * B;
+        A * B;
         cout << "Test Failed!" << endl; // if this line is reached, error.
 
     } catch (std::invalid_argument & e) {

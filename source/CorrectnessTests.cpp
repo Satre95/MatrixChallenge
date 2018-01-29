@@ -210,7 +210,6 @@ bool operator==(const Matrix<T> & A, const EigenMat<T> & B) {
 
 template<class T>
 bool operator==(const Matrix<T> & A, const Matrix<T> & B) {
-#pragma omp parallel for
     for (size_t i = 0; i < A.Rows(); i++) {
         for (size_t j = 0; j < A.Columns(); j++) {
             if(A(i, j) != B(i, j)) return false;

@@ -1,4 +1,4 @@
-# Matrix Challenge for Brain Corp Interview
+# Matrix Challenge
 ## By Siddharth Atre
 
 ### Building the project
@@ -26,7 +26,7 @@ The former enables the use of SIMD vector processing in the matrix multiplicatio
 ### Caveats
 I tried to make the project as cross-platform as possible, but in order to implement the SIMD vector processing, I decided to use the Intel CPU-only intrinsics, rather than raw assembly. I decided to make this tradeoff so that I could complete the challenge in time. This means that the vector processing will not compile when building on AMD, ARM, or old (>5 years) Intel processors. I understand that this is not ideal for a general-purpose matrix library, but I believe it demonstrates my skill set. If I were implementing this for an actual industry use case, I would target whichever platform(s) the library was being built for.
 
-In addition, there is currently a documented bug with the latest versions of CMake and Clang. The OpenMP support query in CMake always fails for Clang, which causes it to disable loop parallelism. For this reason, if you would like to see the optimal run time, I recommend using GCC.
+In addition, there is currently a documented bug with the latest versions of CMake and Clang. The OpenMP support query in CMake always fails for Clang, which causes it to disable loop parallelism. For this reason, if you would like to see the optimal run time, I recommend using GCC. In addition, if compiling on MacOS, you will need to instal llvm (via Homebrew is best), as the clang supplied by default by Xcode is missing OpenMP.
 
 ### Running
 There are two executables generated in the `bin` folder of the project: `CorrectnessTests` and `Profiler`. 
